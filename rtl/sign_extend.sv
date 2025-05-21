@@ -1,0 +1,1 @@
+//componente para gerar imediato de 32 bits

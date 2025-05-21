@@ -1,0 +1,1 @@
+//componente para gerar os sinais de controle

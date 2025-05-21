@@ -1,0 +1,3 @@
+rtl/riscv_definitions.sv
+rtl/register_file.sv
+tb/register_file_tb.sv
