@@ -128,6 +128,19 @@ typedef enum logic [2:0] {
     } funct3_Type_STORE;
 
   
-
+/**
+* Enum: imm_src_t
+*
+ Description:
+*     Encodes the type of immediate field to be used for sign-extension,
+*     based on RISC-V instruction formats (I-type, S-type, B-type, J-type).
+*/
+    typedef enum logic [2:0] {
+        IMM_I = 3'b000, // I-type immediate (e.g., ADDI, LW)
+        IMM_S = 3'b001, // S-type immediate (e.g., SW)
+        IMM_B = 3'b010, // B-type immediate (e.g., BEQ, BNE)
+        IMM_U = 3'b011, // U-type immediate (e.g., LUI, AUIPC)
+        IMM_J = 3'b100  // J-type immediate (e.g., JAL)
+    } imm_src_t;
 
 endpackage: riscv_definitions
