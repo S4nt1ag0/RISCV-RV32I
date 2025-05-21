@@ -39,21 +39,20 @@ module sign_extend_tb;
     initial begin
         $display("===== Starting sign_extend Testbench =====");
 
-        // I-TYPE: imm[11:0] = 0xFFF → instr[31:20] = 12'b111111111111
-        // Bits 31:7 = {imm[11:0], rest = don't care}
+        // I-TYPE: instr[31:20] = 12'b111111111111 → imm[11:0] = 0xFFF
         test_case(IMM_I, 25'b111111111111_0000000000000, 32'hFFFFFFFF);
 
-        // S-TYPE: imm[11:5]=7'b1111111, imm[4:0]=5'b11111 → total 12'b111111111111
+        // S-TYPE: imm[31:25]=7'b1111111, imm[11:7]=5'b11111 → total 12'b111111111111
         // instr[31:25]=imm[11:5], instr[11:7]=imm[4:0]
-        test_case(IMM_S, {7'b1111111, 5'b00000, 5'b11111}, 32'hFFFFF000);
+        test_case(IMM_S, {7'b1111111, 13'b0, 5'b11111}, 32'hFFFFFFFF);
 
-        // B-TYPE: imm = -4 = 0b1_111111_1110_0
+        // B-TYPE: imm[31:25]=7'b1111111, imm[11:7]=5'b11111 → total 12'b111111111111
         // instr[31]=imm[12]=1, instr[7]=imm[11]=1, instr[30:25]=imm[10:5]=111110, instr[11:8]=imm[4:1]=1111
-        test_case(IMM_B, {7'b1111101, 5'b00000, 5'b1111, 1'b1}, 32'hFFFFFFFC);
+        test_case(IMM_B, {7'b1111111, 13'b0, 5'b11110}, 32'hFFFFF7FE);
 
         // J-TYPE: imm = -4 = 0b1_11111111_1_1111111111_0
-        // instr[31]=imm[20]=1, instr[19:12]=11111111, instr[20]=1, instr[30:21]=1111111111
-        test_case(IMM_J, {1'b1, 8'b11111111, 1'b1, 10'b1111111111}, 32'hFFFFFFFC);
+        // instr[31]=imm[20]=1, instr[19:12]=00000000, instr[20]=1, instr[30:21]=0000000000
+        test_case(IMM_J, 25'b1_0000000000_1_00000000_11111, 32'hFFF00800);
 
         // U-TYPE: immediate = 0xFFFFF000 → instr[31:12] = 20'b11111111111111111111
         // Bits [31:12] = 20-bit immediate, [11:7] = don't care
