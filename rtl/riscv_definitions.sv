@@ -129,11 +129,10 @@ typedef enum logic [2:0] {
 
   
 /**
-* Enum: imm_src_t
-*
- Description:
-*     Encodes the type of immediate field to be used for sign-extension,
-*     based on RISC-V instruction formats (I-type, S-type, B-type, J-type).
+Enum: imm_src_t
+Description:
+     Encodes the type of immediate field to be used for sign-extension,
+     based on RISC-V instruction formats (I-type, S-type, B-type, J-type).
 */
     typedef enum logic [2:0] {
         IMM_I = 3'b000, // I-type immediate (e.g., ADDI, LW)
@@ -142,5 +141,44 @@ typedef enum logic [2:0] {
         IMM_U = 3'b011, // U-type immediate (e.g., LUI, AUIPC)
         IMM_J = 3'b100  // J-type immediate (e.g., JAL)
     } imm_src_t;
+
+/**
+Enum: aluOpType
+Description:
+     Encodes the type of immediate field to be used for sign-extension,
+     based on RISC-V instruction formats (I-type, S-type, B-type, J-type).
+*/
+
+typedef enum logic [3:0] {
+        ALU_ADD  = 4'b0000, // funct7 0000000, funct3 ADD  = 3'b000
+        ALU_SLL  = 4'b0001, // funct7 0000000, funct3 SLL  = 3'b001
+        ALU_SLT  = 4'b0010, // funct7 0000000, funct3 SLT  = 3'b010
+        ALU_SLTU = 4'b0011, // funct7 0000000, funct3 SLTU = 3'b011
+        ALU_XOR  = 4'b0100, // funct7 0000000, funct3 XOR  = 3'b100
+        ALU_SRL  = 4'b0101, // funct7 0000000, funct3 SRL  = 3'b101
+        ALU_OR   = 4'b0110, // funct7 0000000, funct3 OR   = 3'b110
+        ALU_AND  = 4'b0111, // funct7 0000000, funct3 AND  = 3'b111
+        ALU_SUB  = 4'b1000, // funct7 0100000, funct3 SUB  = 3'b000
+        ALU_SRA  = 4'b1101, // funct7 0100000, funct3 SRA  = 3'b101
+        ALU_BPS2 = 4'b1010 // By pass source 2
+    } aluOpType;
+
+/* 
+     * Type enum for select ALU source 2.
+     */
+    typedef enum logic {
+        RS2 = 1'b0, 
+        IMM = 1'b1
+    } aluSrc2_e;
+
+    /* 
+     * Type enum for select ALU source 1 from control.
+     */
+    typedef enum logic [1:0] {
+        PC_S1 = 2'b00, 
+        RS1_S1 = 2'b01,
+    }   aluSrc1_e;
+
+
 
 endpackage: riscv_definitions
