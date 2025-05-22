@@ -5,7 +5,7 @@ localparam DATA_WIDTH = 32;
 localparam REG_COUNT = 32;
 
 
-
+    typedef logic [DATA_WIDTH-1:0] dataBus_t;
 
 
     /**
