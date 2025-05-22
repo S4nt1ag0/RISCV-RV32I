@@ -8,8 +8,8 @@ module instruction_decode (
     input  dataBus_t              i_if_pc,       // Program Counter value from IF stage
     input  logic                  i_flush,       // Flush signal
 
-    input  dataBus_t              i_ma_reg_destination, // Forwarded register destination data from MA stage
-    input  dataBus_t              i_ma_reg_wr,          // Write enable signal from MA stage
+    input  logic [REG_ADDR-1:0]   i_ma_reg_destination, // Forwarded register destination data from MA stage
+    input  logic                  i_ma_reg_wr,          // Write enable signal from MA stage
     input  dataBus_t              i_wb_data,            // Write-back data from WB stage
 
     output logic                  o_id_mem_to_reg, // Select memory output as register write-back value
@@ -20,7 +20,7 @@ module instruction_decode (
     output logic                  o_id_alu_src2,    // ALU source 2 select (e.g., IMM or RS2)
 
     output logic                  o_id_branch,      // Branch instruction flag
-    output logic                  o_id_alu_op,      // ALU operation control
+    output aluOpType              o_id_alu_op,      // ALU operation control
     output logic                  o_id_jump,        // Jump instruction flag
     output dataBus_t              o_id_pc,          // Program Counter value to EX stage
     output dataBus_t              o_id_reg_read_data1, // RS1 value output
@@ -32,12 +32,19 @@ module instruction_decode (
 );
 
 // Extract fields from instruction
-opcodeType  opcode         = opcodeType'(i_if_inst[6:0]);
-logic [4:0]  read_reg1_addr = i_if_inst[19:15];
-logic [4:0]  read_reg2_addr = i_if_inst[24:20];
-logic [4:0]  write_reg_addr = i_if_inst[11:7];
-logic [2:0]  funct3         = i_if_inst[14:12];
-logic [6:0]  funct7         = i_if_inst[31:25];
+ opcodeType  opcode;
+ logic [4:0]  read_reg1_addr;
+ logic [4:0]  read_reg2_addr;
+ logic [4:0]  write_reg_addr;
+ logic [2:0]  funct3;
+ logic [6:0]  funct7;
+
+assign  opcode         = opcodeType'(i_if_inst[6:0]);
+assign read_reg1_addr = i_if_inst[19:15];
+assign read_reg2_addr = i_if_inst[24:20];
+assign write_reg_addr = i_if_inst[11:7];
+assign funct3         = i_if_inst[14:12];
+assign funct7         = i_if_inst[31:25];
 
 // Internal wires for controller outputs
 aluOpType    alu_op;
@@ -80,7 +87,7 @@ register_file id_reg_file (
     .i_rst_n(rst_n),
     .i_read_register1_addr(read_reg1_addr),
     .i_read_register2_addr(read_reg2_addr),
-    .i_write_register_addr(write_reg_addr),
+    .i_write_register_addr(i_ma_reg_destination),
     .i_wr_reg_en(i_ma_reg_wr),
     .i_write_data(i_wb_data),
     .o_read_data1(rs1),
@@ -89,7 +96,7 @@ register_file id_reg_file (
 
 // Sign-Extend Immediate
 sign_extend imm_extend (
-    .i_instr(i_if_inst),
+    .i_instr(i_if_inst[31:7]),
     .i_imm_src(imm_src),
     .o_imm_out(immG)
 );
@@ -97,39 +104,39 @@ sign_extend imm_extend (
 // Pipeline Register (ID/EX)
 always_ff @(posedge clk or negedge rst_n) begin : proc_id_ex
     if (!rst_n || i_flush) begin
-        o_id_mem_rd        <= 1'b0;
-        o_id_mem_wr        <= 1'b0;
-        o_id_alu_src1      <= RS1;
-        o_id_alu_src2      <= RS2;
-        o_id_alu_op        <= ALU_ADD;
-        o_id_pc            <= '0;
-        o_id_reg_read_data1<= '0;
-        o_id_reg_read_data2<= '0;
-        o_id_imm           <= '0;
-        o_id_reg_destination <= '0;
-        o_id_reg_wr        <= 1'b0;
-        o_id_funct3        <= 3'b000;
-        o_id_funct7        <= 7'b0000000;
-        o_id_branch        <= 1'b0;
-        o_id_mem_to_reg    <= 1'b0;
-        o_id_jump          <= 1'b0;
+        o_id_mem_rd           <= 1'b0;
+        o_id_mem_wr           <= 1'b0;
+        o_id_alu_src1         <= RS1;
+        o_id_alu_src2         <= RS2;
+        o_id_alu_op           <= ALU_ADD;
+        o_id_pc               <= '0;
+        o_id_reg_read_data1   <= '0;
+        o_id_reg_read_data2   <= '0;
+        o_id_imm              <= '0;
+        o_id_reg_destination  <= '0;
+        o_id_reg_wr           <= 1'b0;
+        o_id_funct3           <= 3'b000;
+        o_id_funct7           <= 7'b0000000;
+        o_id_branch           <= 1'b0;
+        o_id_mem_to_reg       <= 1'b0;
+        o_id_jump             <= 1'b0;
     end else if (clk_en) begin
-        o_id_mem_rd        <= mem_read;
-        o_id_mem_wr        <= mem_write;
-        o_id_alu_src1      <= alu_src1;
-        o_id_alu_src2      <= alu_src2;
-        o_id_alu_op        <= alu_op;
-        o_id_pc            <= i_if_pc;
-        o_id_reg_destination <= write_reg_addr;
-        o_id_reg_wr        <= reg_write;
-        o_id_funct3        <= funct3;
-        o_id_funct7        <= funct7;
-        o_id_branch        <= branch;
-        o_id_mem_to_reg    <= mem_to_reg;
-        o_id_jump          <= jump;
-        o_id_reg_read_data2 <= rs1;
-        o_id_reg_read_data2 <= rs2;
-        o_id_jump          <=  immG;
+        o_id_mem_rd           <= mem_read;
+        o_id_mem_wr           <= mem_write;
+        o_id_alu_src1         <= alu_src1;
+        o_id_alu_src2         <= alu_src2;
+        o_id_alu_op           <= alu_op;
+        o_id_pc               <= i_if_pc;
+        o_id_reg_destination  <= write_reg_addr;
+        o_id_reg_wr           <= reg_write;
+        o_id_funct3           <= funct3;
+        o_id_funct7           <= funct7;
+        o_id_branch           <= branch;
+        o_id_mem_to_reg       <= mem_to_reg;
+        o_id_jump             <= jump;
+        o_id_reg_read_data1   <= rs1;
+        o_id_reg_read_data2   <= rs2;
+        o_id_imm              <= immG;
     end
 end : proc_id_ex
 
