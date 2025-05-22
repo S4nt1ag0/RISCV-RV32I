@@ -174,10 +174,10 @@ typedef enum logic [3:0] {
     /* 
      * Type enum for select ALU source 1 from control.
      */
-    typedef enum logic [1:0] {
-        PC_S1 = 2'b00, 
-        RS1_S1 = 2'b01,
-    }   aluSrc1_e;
+    typedef enum logic {
+        PC = 1'b0, 
+        RS1 = 1'b1
+    } aluSrc1_e;
 
 
 
