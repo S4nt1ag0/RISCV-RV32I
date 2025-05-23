@@ -135,50 +135,56 @@ Description:
      based on RISC-V instruction formats (I-type, S-type, B-type, J-type).
 */
     typedef enum logic [2:0] {
-        IMM_I = 3'b000, // I-type immediate (e.g., ADDI, LW)
-        IMM_S = 3'b001, // S-type immediate (e.g., SW)
-        IMM_B = 3'b010, // B-type immediate (e.g., BEQ, BNE)
-        IMM_U = 3'b011, // U-type immediate (e.g., LUI, AUIPC)
-        IMM_J = 3'b100  // J-type immediate (e.g., JAL)
+        IMM_I = 3'b000,  // I-type immediate (e.g., ADDI, LW)
+        IMM_IS = 3'b001, //I-type - Shifts by constant are encoded as specialization of I-type
+        IMM_S = 3'b010,  // S-type immediate (e.g., SW)
+        IMM_B = 3'b011,  // B-type immediate (e.g., BEQ, BNE)
+        IMM_U = 3'b100,  // U-type immediate (e.g., LUI, AUIPC)
+        IMM_J = 3'b101   // J-type immediate (e.g., JAL)
     } imm_src_t;
 
 /**
-Enum: aluOpType
-Description:
-     Encodes the type of immediate field to be used for sign-extension,
-     based on RISC-V instruction formats (I-type, S-type, B-type, J-type).
-*/
+ * Enum: aluOpType
+ * Description:
+ *     Specifies the operation type used by the ALU, based on RISC-V
+ *     instruction formats and function codes (funct7/funct3 combinations).
+ *     Also includes pseudo-operations for comparisons and bypassing.
+ */
+    typedef enum logic [4:0] {
+        ALU_ADD    = 5'b00000, // funct7 = 0000000, funct3 = 000 (ADD)
+        ALU_SLL    = 5'b00001, // funct7 = 0000000, funct3 = 001 (SLL)
+        ALU_SLT    = 5'b00010, // funct7 = 0000000, funct3 = 010 (SLT)
+        ALU_SLTU   = 5'b00011, // funct7 = 0000000, funct3 = 011 (SLTU)
+        ALU_XOR    = 5'b00100, // funct7 = 0000000, funct3 = 100 (XOR)
+        ALU_SRL    = 5'b00101, // funct7 = 0000000, funct3 = 101 (SRL)
+        ALU_OR     = 5'b00110, // funct7 = 0000000, funct3 = 110 (OR)
+        ALU_AND    = 5'b00111, // funct7 = 0000000, funct3 = 111 (AND)
+        ALU_SUB    = 5'b01000, // funct7 = 0100000, funct3 = 000 (SUB)
+        ALU_SRA    = 5'b01001, // funct7 = 0100000, funct3 = 101 (SRA)
 
-typedef enum logic [3:0] {
-        ALU_ADD  = 4'b0000, // funct7 0000000, funct3 ADD  = 3'b000
-        ALU_SLL  = 4'b0001, // funct7 0000000, funct3 SLL  = 3'b001
-        ALU_SLT  = 4'b0010, // funct7 0000000, funct3 SLT  = 3'b010
-        ALU_SLTU = 4'b0011, // funct7 0000000, funct3 SLTU = 3'b011
-        ALU_XOR  = 4'b0100, // funct7 0000000, funct3 XOR  = 3'b100
-        ALU_SRL  = 4'b0101, // funct7 0000000, funct3 SRL  = 3'b101
-        ALU_OR   = 4'b0110, // funct7 0000000, funct3 OR   = 3'b110
-        ALU_AND  = 4'b0111, // funct7 0000000, funct3 AND  = 3'b111
-        ALU_SUB  = 4'b1000, // funct7 0100000, funct3 SUB  = 3'b000
-        ALU_SRA  = 4'b1101, // funct7 0100000, funct3 SRA  = 3'b101
-        ALU_BPS2 = 4'b1010 // By pass source 2
+        ALU_BPS2   = 5'b01010, // Bypass source 2
+        ALU_EQUAL  = 5'b01011, // Equal comparison (==)
+        ALU_NEQUAL = 5'b01100, // Not equal (!=)
+        ALU_LT     = 5'b01101, // Signed less than (<)
+        ALU_GT     = 5'b01110, // Signed Greater/Equal than (>=)
+        ALU_LTU    = 5'b01111, // Unsigned less than (<)
+        ALU_GTU    = 5'b10000  // Unsigned Greater/Equal than (>=)
     } aluOpType;
 
 /* 
-     * Type enum for select ALU source 2.
-     */
+* Type enum for select ALU source 1 from control.
+*/
+    typedef enum logic {
+        RS1 = 1'b0,
+        PC = 1'b1
+    } aluSrc1_e;
+
+/* 
+* Type enum for select ALU source 2.
+*/
     typedef enum logic {
         RS2 = 1'b0, 
         IMM = 1'b1
     } aluSrc2_e;
-
-    /* 
-     * Type enum for select ALU source 1 from control.
-     */
-    typedef enum logic {
-        PC = 1'b0, 
-        RS1 = 1'b1
-    } aluSrc1_e;
-
-
 
 endpackage: riscv_definitions

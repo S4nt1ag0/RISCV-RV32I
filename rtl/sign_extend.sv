@@ -13,7 +13,8 @@ module sign_extend (
         case (i_imm_src)
             // I-type (ex: LW, ADDI, ANDI, etc.)
             IMM_I: o_imm_out = {{20{i_instr[31]}}, i_instr[31:20]};
-
+            
+            IMM_IS: o_imm_out = {{27{i_instr[31]}}, i_instr[24:20]};
             // S-type (ex: SW, SH, SB)
             IMM_S: o_imm_out = {{20{i_instr[31]}}, i_instr[31:25], i_instr[11:7]};
 

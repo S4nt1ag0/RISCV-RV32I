@@ -90,6 +90,15 @@ always_comb begin : proc_decode
             o_alu_src1    = RS1;
             o_alu_src2    = RS2;
             o_imm_src     = IMM_B;
+            o_alu_control = ALU_EQUAL; // Default comparison: equal
+
+            case (i_funct3)
+                3'b001: o_alu_control = ALU_NEQUAL; // Not equal
+                3'b100: o_alu_control = ALU_LT;     // Signed less than
+                3'b101: o_alu_control = ALU_GT;     // Signed greater than or equal
+                3'b110: o_alu_control = ALU_LTU;    // Unsigned less than
+                3'b111: o_alu_control = ALU_GTU;    // Unsigned greater than or equal
+            endcase
         end
         LOAD_S: begin
             o_alu_control = ALU_ADD;
@@ -109,17 +118,18 @@ always_comb begin : proc_decode
             o_imm_src     = IMM_S;
         end
         ALUI_S: begin
+            o_alu_src1    = RS1;
+            o_alu_src2    = IMM;
+            o_reg_write   = 1'b1;
+            o_imm_src     = IMM_I;
+            if(i_funct3 == 3'b001 || i_funct3 == 3'b101 )
+                o_imm_src     = IMM_IS;
             if (i_funct3 == 3'b000 && i_funct7[5])
                 o_alu_control = ALU_SUB;
             else if (i_funct3 == 3'b101 && i_funct7[5])
                 o_alu_control = ALU_SRA;
             else
                 o_alu_control = aluOpType'({1'b0, i_funct3});
-
-            o_alu_src1    = RS1;
-            o_alu_src2    = IMM;
-            o_reg_write   = 1'b1;
-            o_imm_src     = IMM_I;
         end
         ALU_S: begin
             if (i_funct3 == 3'b000 && i_funct7[5])

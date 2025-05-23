@@ -28,7 +28,7 @@ module instruction_decode_tb;
     logic [DATA_WIDTH-1:0] o_id_pc;
     logic [DATA_WIDTH-1:0] o_id_reg_read_data1;
     logic [DATA_WIDTH-1:0] o_id_reg_read_data2;
-    logic [DATA_WIDTH-1:0] o_id_imm;
+    logic signed [DATA_WIDTH-1:0] o_id_imm;
     logic [REG_ADDR-1:0]   o_id_reg_destination;
     logic [2:0]            o_id_funct3;
     logic [6:0]            o_id_funct7;
