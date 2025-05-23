@@ -10,10 +10,12 @@ import riscv_definitions::*;
  */
 module execution_tb;
 
+  localparam DEBUG_MODE = 0;
+
   // Clock and Reset
-  logic clk;
-  logic rst_n;
-  logic clk_en;
+  logic clk = 0;
+  logic rst_n = 1;
+  logic clk_en = 1;
 
   // Inputs to execution module
   logic                  i_id_mem_to_reg;
@@ -49,7 +51,29 @@ module execution_tb;
   logic [2:0]            o_ex_funct3;
   logic [6:0]            o_ex_funct7;
 
-  // Instantiate the execution module
+  // Estatísticas de testes
+  int passed = 0;
+  int failed = 0;
+  int total = 0;
+
+  // Tipo de vetor de teste
+  typedef struct {
+    string     name;
+    logic      alu_src1;
+    logic      alu_src2;
+    aluOpType  alu_op;
+    logic      jump;
+    logic      branch;
+    dataBus_t  pc;
+    dataBus_t  reg1;
+    dataBus_t  reg2;
+    dataBus_t  imm;
+    dataBus_t  expected_result;
+    logic      expected_flush;
+    dataBus_t  expected_jump_addr;
+  } test_vector_t;
+
+  // Instância do módulo
   execution uut (
     .clk(clk),
     .clk_en(clk_en),
@@ -86,63 +110,172 @@ module execution_tb;
     .o_ex_funct7(o_ex_funct7)
   );
 
-  // Clock generator
+  // Geração de clock
   always #5 clk = ~clk;
 
+  // Vetor de testes
+  test_vector_t tests[] = '{
+  '{ 
+        name: "ADD: reg1 + reg2",
+        alu_src1: 1'b0,
+        alu_src2: 1'b0,
+        alu_op: ALU_ADD,
+        jump: 1'b0,
+        branch: 1'b0,
+        pc: 32'h1000_0000,
+        reg1: 32'd5,
+        reg2: 32'd3,
+        imm: 32'd0,
+        expected_result: 32'd8,
+        expected_flush: 1'b0,
+        expected_jump_addr: 32'd8 
+    },
+  '{ 
+        name: "ADDI: reg1 + imm",
+        alu_src1: 1'b0,
+        alu_src2: 1'b1,
+        alu_op: ALU_ADD,
+        jump: 1'b0,
+        branch: 1'b0,
+        pc: 32'h1000_0004,
+        reg1: 32'd7,
+        reg2: 32'd0,
+        imm: 32'd4,
+        expected_result: 32'd11,
+        expected_flush: 1'b0,
+        expected_jump_addr: 32'd11 
+    },
+  '{ 
+        name: "SLT: reg1 < reg2",
+        alu_src1: 1'b0,
+        alu_src2: 1'b0,
+        alu_op: ALU_LT,
+        jump: 1'b0,
+        branch: 1'b0,
+        pc: 32'h1000_0008,
+        reg1: 32'd2,
+        reg2: 32'd5,
+        imm: 32'd0,
+        expected_result: 32'd1,
+        expected_flush: 1'b0,
+        expected_jump_addr: 32'd1
+    },
+    '{ name: "JAL: PC + imm",
+        alu_src1: 1'b1,
+        alu_src2: 1'b1, 
+        alu_op: ALU_ADD,
+        jump: 1'b1,
+        branch: 1'b0,
+        pc: 32'h1000_000C,
+        reg1: 32'd0, 
+        reg2: 32'd0, 
+        imm: 32'd16,
+        expected_result: 32'h1000_001C,
+        expected_flush: 1'b1, 
+        expected_jump_addr: 32'h1000_001C
+    },
+    '{ name: "BNE false",
+        alu_src1: 1'b0,
+        alu_src2: 1'b0,
+        alu_op: ALU_NEQUAL,
+        jump: 1'b0, 
+        branch: 1'b1,
+        pc: 32'h1000_0010, 
+        reg1: 32'd4,
+        reg2: 32'd4, 
+        imm: 32'd8,
+        expected_result: 32'd0, 
+        expected_flush: 1'b0,
+        expected_jump_addr: 32'd0 
+    },
+    '{ name: "BNE true",
+        alu_src1: 1'b0, 
+        alu_src2: 1'b0, 
+        alu_op: ALU_NEQUAL,
+        jump: 1'b0, 
+        branch: 1'b1,
+        pc: 32'h1000_0014,
+        reg1: 32'd10, 
+        reg2: 32'd4, 
+        imm: 32'd8,
+        expected_result: 32'd1,
+        expected_flush: 1'b1,
+        expected_jump_addr: 32'h1000_001C
+    },
+    '{ 
+        name: "SLTU: reg1 < reg2 unsigned",
+        alu_src1: 1'b0, 
+        alu_src2: 1'b0, 
+        alu_op: ALU_LTU,
+        jump: 1'b0, 
+        branch: 1'b0,
+        pc: 32'h1000_0018, 
+        reg1: 32'hFFFF_FFFF, 
+        reg2: 32'h0000_0001, 
+        imm: 32'd0,
+        expected_result: 32'd0, 
+        expected_flush: 1'b0, 
+        expected_jump_addr: 32'd0
+      }
+};
+
+  // Task de aplicação e checagem
+  task automatic apply_and_check(input test_vector_t t); begin
+    @(negedge clk);
+    i_id_alu_src1        = t.alu_src1;
+    i_id_alu_src2        = t.alu_src2;
+    i_id_alu_op          = t.alu_op;
+    i_id_jump            = t.jump;
+    i_id_branch          = t.branch;
+    i_id_pc              = t.pc;
+    i_id_reg_read_data1  = t.reg1;
+    i_id_reg_read_data2  = t.reg2;
+    i_id_imm             = t.imm;
+    
+    @(posedge clk);
+    @(posedge clk); // Espera 2 ciclos
+
+    total++;
+
+    if (o_ex_alu_result === t.expected_result &&
+        o_ex_flush === t.expected_flush &&
+        o_ex_jump_addr === t.expected_jump_addr) begin
+      passed++;
+      $display("PASS: %s", t.name);
+      if (DEBUG_MODE) begin
+        $display("  ALU Result: %h | Expected: %h", o_ex_alu_result, t.expected_result);
+        $display("  Flush     : %b | Expected: %b", o_ex_flush, t.expected_flush);
+        $display("  Jump Addr : %h | Expected: %h", o_ex_jump_addr, t.expected_jump_addr);
+      end
+    end else begin
+      failed++;
+      $display("FAIL: %s", t.name);
+      $display("  Got: ALU=%h, Flush=%b, JumpAddr=%h", o_ex_alu_result, o_ex_flush, o_ex_jump_addr);
+      $display("  Exp: ALU=%h, Flush=%b, JumpAddr=%h", t.expected_result, t.expected_flush, t.expected_jump_addr);
+    end
+  end endtask
+
+  // Inicialização
   initial begin
-    // Initialize inputs
-    clk         = 0;
-    clk_en      = 1;
-    i_id_mem_to_reg = 0;
-    i_id_alu_src1   = 0;
-    i_id_alu_src2   = 0;
-    i_id_reg_wr     = 0;
-    i_id_mem_rd     = 0;
-    i_id_mem_wr     = 0;
-    i_id_result_src = 0;
-    i_id_branch     = 0;
-    i_id_alu_op     = ALU_ADD;
-    i_id_jump       = 0;
-    i_id_pc         = 32'h00000010;
-    i_id_reg_read_data1 = 32'h00000005;
-    i_id_reg_read_data2 = 32'h00000003;
-    i_id_imm        = 32'h00000008;
-    i_id_reg_destination = 5'd10;
-    i_id_funct3     = 3'b000;
-    i_id_funct7     = 7'b0000000;
-
-    rst_n = 1;
     @(posedge clk);
-    repeat (2) @(posedge clk);
     rst_n = 0;
-    @(posedge clk);
+    repeat(2) @(posedge clk);
     rst_n = 1;
+    repeat(2) @(posedge clk);
 
-    // Test ALU operation ADD with SrcA = reg1, SrcB = reg2
-    i_id_alu_src1 = 0; // reg1
-    i_id_alu_src2 = 0; // reg2
-    i_id_alu_op = ALU_ADD;
-    @(posedge clk);
+    // Executa todos os testes
+    foreach (tests[i]) begin
+      apply_and_check(tests[i]);
+    end
 
-    $display("ALU ADD result: %h", o_ex_alu_result);
+    // Relatório
+    $display("\n=== Testbench Finished ===");
+    $display("  Total tests:  %0d", total);
+    $display("  Passed:       %0d", passed);
+    $display("  Failed:       %0d", failed);
+    $display("  Success rate: %0.1f%%", 100.0 * real'(passed)/real'(total));
 
-    // Test ALU operation SUB with SrcA = reg1, SrcB = imm
-    i_id_alu_src2 = 1; // imm
-    i_id_alu_op = ALU_SUB;
-    @(posedge clk);
-
-    $display("ALU SUB result (reg1 - imm): %h", o_ex_alu_result);
-
-    // Test branch taken (BEQ, reg1 == imm) - not expected to take branch
-    i_id_branch = 1;
-    i_id_reg_read_data1 = 32'h00000010;
-    i_id_imm = 32'h00000010;
-    i_id_alu_src2 = 1;
-    i_id_alu_op = ALU_SUB;
-    @(posedge clk);
-
-    $display("Branch flush: %b", o_ex_flush);
-
+    repeat (3) @(posedge clk);
     $finish;
   end
 
