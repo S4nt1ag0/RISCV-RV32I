@@ -35,6 +35,7 @@ module id_ex_tb;
     logic [REG_ADDR-1:0]   o_id_reg_destination;
     logic [2:0]            o_id_funct3;
     logic [6:0]            o_id_funct7;
+    logic [1:0]            o_id_result_src;
 
 
     // Outputs from execution module
@@ -80,7 +81,8 @@ module id_ex_tb;
         .o_id_imm(o_id_imm),
         .o_id_reg_destination(o_id_reg_destination),
         .o_id_funct3(o_id_funct3),
-        .o_id_funct7(o_id_funct7)
+        .o_id_funct7(o_id_funct7),
+        .o_id_result_src(o_id_result_src)
     );
 
     execution ex (
@@ -291,13 +293,13 @@ string test_names[] = '{
                     $display("RegWr      : %b",  o_ex_reg_wr);
                     $display("MemRd      : %b",  o_ex_mem_rd);
                     $display("MemWr      : %b",  o_ex_mem_wr);
-                    $display("ResultSRC     : %b",  o_ex_result_src);
-                    $display("flush      : %b", o_ex_flush);
-                    $display("Jump_addr       : %b",  o_ex_jump_addr);
-                    $display("pc_plus_4     : %b",  o_ex_pc_plus_4);
-                    $display("alu_result   : %h",  o_ex_alu_result);
-                    $display("data2   : %h",  o_ex_data2);
-                    $display("rd         : %b", o_ex_reg_destination);
+                    $display("ResultSRC  : %b",  o_ex_result_src);
+                    $display("flush      : %b",  o_ex_flush);
+                    $display("Jump_addr  : %b",  o_ex_jump_addr);
+                    $display("pc_plus_4  : %b",  o_ex_pc_plus_4);
+                    $display("alu_result : %h",  o_ex_alu_result);
+                    $display("data2      : %h",  o_ex_data2);
+                    $display("rd         : %b",  o_ex_reg_destination);
                     $display("funct3     : %b",  o_ex_funct3);
                     $display("funct7     : %b",  o_ex_funct7);
                     $display("==============================================================\n");
