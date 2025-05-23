@@ -1,136 +1,126 @@
 import riscv_definitions::*; // Import package into $unit space
-
+/**
+ * Module: execution
+ * Description:
+ *     Implements the execution stage of a RISC-V pipeline. This stage handles ALU operations,
+ *     jump and branch decision logic, and forwards data and control signals to the memory stage.
+ *
+ **/
 module execution (
-    input  logic                  clk,           // Clock
-    input  logic                  clk_en,        // Clock Enable
-    input  logic                  rst_n,         // Asynchronous reset (active low)
+    input  logic                 clk,                   // Clock signal
+    input  logic                 clk_en,                // Clock Enable
+    input  logic                 rst_n,                 // Asynchronous reset (active low)
 
-    input logic                  i_id_mem_to_reg, // Select memory input as register write-back value
-    input logic                  i_id_alu_src1,    // ALU source 1 select (e.g., PC or RS1)
-    input logic                  i_id_reg_wr,      // Register write enable
-    input logic                  i_id_mem_rd,      // Memory read enable
-    input logic                  i_id_mem_wr,      // Memory write enable
-    input logic                  i_id_alu_src2,    // ALU source 2 select (e.g., IMM or RS2)
+    input logic                  i_id_mem_to_reg,       // Select memory input as register write-back value
+    input logic                  i_id_alu_src1,         // Selects source A for the ALU (0: RS1, 1: PC).
+    input logic                  i_id_alu_src2,         // Selects source B for the ALU (0: RS2, 1: IMM).
+    input logic                  i_id_reg_wr,           // Register write enable
+    input logic                  i_id_mem_rd,           // Memory read enable
+    input logic                  i_id_mem_wr,           // Memory write enable
+    input logic                  i_id_result_src,       // Write-back result selector (PC+4, ALU result, or memory).
+    input logic                  i_id_branch,           // Branch instruction flag
+    input aluOpType              i_id_alu_op,           // ALU operation control
+    input logic                  i_id_jump,             // Jump instruction flag
+    input dataBus_t              i_id_pc,               // Program Counter value at ID stage
+    input dataBus_t              i_id_reg_read_data1,   // RS1 value input
+    input dataBus_t              i_id_reg_read_data2,   // RS2 value input
+    input dataBus_t              i_id_imm,              // Sign-extended immediate value
+    input logic [REG_ADDR-1:0]   i_id_reg_destination,  // Register destination address
+    input logic [2:0]            i_id_funct3,           // funct3 field from instruction
+    input logic [6:0]            i_id_funct7,           // funct7 field from instruction
 
-    input logic                  i_id_branch,      // Branch instruction flag
-    input aluOpType              i_id_alu_op,      // ALU operation control
-    input logic                  i_id_jump,        // Jump instruction flag
-    input dataBus_t              i_id_pc,          // Program Counter value to EX stage
-    input dataBus_t              i_id_reg_read_data1, // RS1 value input
-    input dataBus_t              i_id_reg_read_data2, // RS2 value input
-    input dataBus_t              i_id_imm,         // Sign-extended immediate value
-    input logic [REG_ADDR-1:0]   i_id_reg_destination, // Register destination address
-    input logic [2:0]            i_id_funct3,      // funct3 field from instruction
-    input logic [6:0]            i_id_funct7       // funct7 field from instruction
+    output logic                  o_ex_mem_to_reg,      // Forwarded control signal for memory to register path.
+    output logic                  o_ex_reg_wr,          // Forwarded register write enable.
+    output logic                  o_ex_mem_rd,          // Forwarded memory read enable.
+    output logic                  o_ex_mem_wr,          // Forwarded memory write enable.
+    output logic                  o_ex_result_src,      // Forwarded write-back result selector.
+    output logic [REG_ADDR-1:0]   o_ex_reg_destination, // Forwarded Register destination address
+    output logic [2:0]            o_ex_funct3,          // Forwarded funct3.
+    output logic [6:0]            o_ex_funct7,          // Forwarded funct7.
+    output logic                  o_ex_flush,           // Pipeline flush signal (for control transfer).
+    output dataBus_t              o_ex_jump_addr,       // Computed jump or branch target address.
+    output dataBus_t              o_ex_pc_plus_4,       // PC + 4 value.
+    output dataBus_t              o_ex_alu_result,      // ALU result.
+    output dataBus_t              o_ex_data2            // RS2 value output
+    
 );
 
-// Extract fields from instruction
- opcodeType  opcode;
- logic [4:0]  read_reg1_addr;
- logic [4:0]  read_reg2_addr;
- logic [4:0]  write_reg_addr;
- logic [2:0]  funct3;
- logic [6:0]  funct7;
 
-assign  opcode         = opcodeType'(i_if_inst[6:0]);
-assign read_reg1_addr = i_if_inst[19:15];
-assign read_reg2_addr = i_if_inst[24:20];
-assign write_reg_addr = i_if_inst[11:7];
-assign funct3         = i_if_inst[14:12];
-assign funct7         = i_if_inst[31:25];
+   // Internal signals
+    logic     flush;
+    dataBus_t jump_addr;
+    dataBus_t pc_plus_4;
+    dataBus_t alu_result;
+    dataBus_t SrcA;
+    dataBus_t SrcB;
 
-// Internal wires for controller outputs
-aluOpType    alu_op;
-aluSrc1_e    alu_src1;
-aluSrc2_e    alu_src2;
-logic        reg_write;
-logic        mem_write;
-logic        mem_read;
-logic        mem_to_reg;
-logic        branch;
-logic        jump;
-logic [1:0]  result_src;
-imm_src_t    imm_src;
-dataBus_t    rs1;
-dataBus_t    rs2;
-dataBus_t    immG;
+    // ALU source A mux: selects between register RS1 and PC
+    mux2to1 select_SrcA (
+        .in0(i_id_reg_read_data1),
+        .in1(i_id_pc), 
+        .sel(i_id_alu_src1),
+        .out(SrcA)
+    );
 
-// Instantiate Controller
-controller id_controller (
-    .i_opcode(opcode),
-    .i_funct3(funct3),
-    .i_funct7(funct7),
-    .o_alu_control(alu_op),
-    .o_reg_write(reg_write),
-    .o_alu_src1(alu_src1),
-    .o_alu_src2(alu_src2),
-    .o_mem_write(mem_write),
-    .o_mem_read(mem_read),
-    .o_mem_to_reg(mem_to_reg),
-    .o_branch(branch),
-    .o_jump(jump),
-    .o_imm_src(imm_src),
-    .o_result_src(result_src)
-);
+    // ALU source B mux: selects between register RS2 and immediate
+    mux2to1 select_SrcB (
+        .in0(i_id_reg_read_data2),
+        .in1(i_id_imm), 
+        .sel(i_id_alu_src2),
+        .out(SrcB)
+    );
 
-// Register File
-register_file id_reg_file (
-    .i_clk(clk),
-    .i_clk_en(clk_en),
-    .i_rst_n(rst_n),
-    .i_read_register1_addr(read_reg1_addr),
-    .i_read_register2_addr(read_reg2_addr),
-    .i_write_register_addr(i_ma_reg_destination),
-    .i_wr_reg_en(i_ma_reg_wr),
-    .i_write_data(i_wb_data),
-    .o_read_data1(rs1),
-    .o_read_data2(rs2)
-);
+    // ALU instance
+    alu alu_instance (
+        .SrcA(SrcA),
+        .SrcB(SrcB),
+        .Operation(i_id_alu_op),
+        .ALUResult(alu_result)
+    );
 
-// Sign-Extend Immediate
-sign_extend imm_extend (
-    .i_instr(i_if_inst[31:7]),
-    .i_imm_src(imm_src),
-    .o_imm_out(immG)
-);
+    // Branch Unit instance
+    branch_unit branch_unit_instance (
+        .current_PC(i_id_pc),
+        .imm(i_id_imm),
+        .jump(i_id_jump),
+        .branch(i_id_branch),
+        .aluResult(alu_result),
+        .PC_plus_4(pc_plus_4),
+        .jump_addr(jump_addr),
+        .flush(flush)
+    );
 
-// Pipeline Register (ID/EX)
-always_ff @(posedge clk or negedge rst_n) begin : proc_id_ex
-    if (!rst_n || i_flush) begin
-        o_id_mem_rd           <= 1'b0;
-        o_id_mem_wr           <= 1'b0;
-        o_id_alu_src1         <= RS1;
-        o_id_alu_src2         <= RS2;
-        o_id_alu_op           <= ALU_ADD;
-        o_id_pc               <= '0;
-        o_id_reg_read_data1   <= '0;
-        o_id_reg_read_data2   <= '0;
-        o_id_imm              <= '0;
-        o_id_reg_destination  <= '0;
-        o_id_reg_wr           <= 1'b0;
-        o_id_funct3           <= 3'b000;
-        o_id_funct7           <= 7'b0000000;
-        o_id_branch           <= 1'b0;
-        o_id_mem_to_reg       <= 1'b0;
-        o_id_jump             <= 1'b0;
-    end else if (clk_en) begin
-        o_id_mem_rd           <= mem_read;
-        o_id_mem_wr           <= mem_write;
-        o_id_alu_src1         <= alu_src1;
-        o_id_alu_src2         <= alu_src2;
-        o_id_alu_op           <= alu_op;
-        o_id_pc               <= i_if_pc;
-        o_id_reg_destination  <= write_reg_addr;
-        o_id_reg_wr           <= reg_write;
-        o_id_funct3           <= funct3;
-        o_id_funct7           <= funct7;
-        o_id_branch           <= branch;
-        o_id_mem_to_reg       <= mem_to_reg;
-        o_id_jump             <= jump;
-        o_id_reg_read_data1   <= rs1;
-        o_id_reg_read_data2   <= rs2;
-        o_id_imm              <= immG;
-    end
-end : proc_id_ex
+    // Pipeline register (EX stage outputs)
+    always_ff @(posedge clk or negedge rst_n) begin : proc_id_ex
+        if (!rst_n) begin
+            o_ex_mem_to_reg      <= '0;
+            o_ex_reg_wr          <= '0;
+            o_ex_mem_rd          <= '0;
+            o_ex_mem_wr          <= '0;
+            o_ex_result_src      <= '0;
+            o_ex_reg_destination <= '0;
+            o_ex_funct3          <= '0;
+            o_ex_funct7          <= '0;
+            o_ex_flush           <= '0;
+            o_ex_jump_addr       <= '0;
+            o_ex_pc_plus_4       <= '0;
+            o_ex_alu_result      <= '0;
+            o_ex_data2           <= '0;
+        end else if (clk_en) begin
+            o_ex_mem_to_reg      <= i_id_mem_to_reg;
+            o_ex_reg_wr          <= i_id_reg_wr;
+            o_ex_mem_rd          <= i_id_mem_rd;
+            o_ex_mem_wr          <= i_id_mem_wr;
+            o_ex_result_src      <= i_id_result_src;
+            o_ex_reg_destination <= i_id_reg_destination;
+            o_ex_funct3          <= i_id_funct3;
+            o_ex_funct7          <= i_id_funct7;
+            o_ex_flush           <= flush;
+            o_ex_jump_addr       <= jump_addr;
+            o_ex_pc_plus_4       <= pc_plus_4;
+            o_ex_alu_result      <= alu_result;
+            o_ex_data2           <= SrcB;
+        end
+    end : proc_id_ex
 
 endmodule

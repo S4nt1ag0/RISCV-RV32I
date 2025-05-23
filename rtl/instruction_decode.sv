@@ -1,34 +1,35 @@
 import riscv_definitions::*; // Import package into $unit space
 
 module instruction_decode (
-    input  logic                  clk,           // Clock
-    input  logic                  clk_en,        // Clock Enable
-    input  logic                  rst_n,         // Asynchronous reset (active low)
-    input  logic [DATA_WIDTH-1:0] i_if_inst,     // Instruction from IF stage
-    input  dataBus_t              i_if_pc,       // Program Counter value from IF stage
-    input  logic                  i_flush,       // Flush signal
+    input  logic                  clk,                      // Clock
+    input  logic                  clk_en,                   // Clock Enable
+    input  logic                  rst_n,                    // Asynchronous reset (active low)
+    input  logic [DATA_WIDTH-1:0] i_if_inst,                // Instruction from IF stage
+    input  dataBus_t              i_if_pc,                  // Program Counter value from IF stage
+    input  logic                  i_flush,                  // Flush signal
 
-    input  logic [REG_ADDR-1:0]   i_ma_reg_destination, // Forwarded register destination data from MA stage
-    input  logic                  i_ma_reg_wr,          // Write enable signal from MA stage
-    input  dataBus_t              i_wb_data,            // Write-back data from WB stage
+    input  logic [REG_ADDR-1:0]   i_ma_reg_destination,     // Forwarded register destination data from MA stage
+    input  logic                  i_ma_reg_wr,              // Write enable signal from MA stage
+    input  dataBus_t              i_wb_data,                // Write-back data from WB stage
 
-    output logic                  o_id_mem_to_reg, // Select memory output as register write-back value
-    output logic                  o_id_alu_src1,    // ALU source 1 select (e.g., PC or RS1)
-    output logic                  o_id_reg_wr,      // Register write enable
-    output logic                  o_id_mem_rd,      // Memory read enable
-    output logic                  o_id_mem_wr,      // Memory write enable
-    output logic                  o_id_alu_src2,    // ALU source 2 select (e.g., IMM or RS2)
+    output logic                  o_id_mem_to_reg,          // Select memory output as register write-back value
+    output logic                  o_id_alu_src1,            // ALU source 1 select (e.g., PC or RS1)
+    output logic                  o_id_alu_src2,            // ALU source 2 select (e.g., IMM or RS2)
+    output logic                  o_id_reg_wr,              // Register write enable
+    output logic                  o_id_mem_rd,              // Memory read enable
+    output logic                  o_id_mem_wr,              // Memory write enable
+    output logic                  o_id_result_src,          // result source 1 select in write back (PC+4, alu_result, mem_read)
 
-    output logic                  o_id_branch,      // Branch instruction flag
-    output aluOpType              o_id_alu_op,      // ALU operation control
-    output logic                  o_id_jump,        // Jump instruction flag
-    output dataBus_t              o_id_pc,          // Program Counter value to EX stage
-    output dataBus_t              o_id_reg_read_data1, // RS1 value output
-    output dataBus_t              o_id_reg_read_data2, // RS2 value output
-    output dataBus_t              o_id_imm,         // Sign-extended immediate value
-    output logic [REG_ADDR-1:0]   o_id_reg_destination, // Register destination address
-    output logic [2:0]            o_id_funct3,      // funct3 field from instruction
-    output logic [6:0]            o_id_funct7       // funct7 field from instruction
+    output logic                  o_id_branch,              // Branch instruction flag
+    output aluOpType              o_id_alu_op,              // ALU operation control
+    output logic                  o_id_jump,                // Jump instruction flag
+    output dataBus_t              o_id_pc,                  // Program Counter value to EX stage
+    output dataBus_t              o_id_reg_read_data1,      // RS1 value output
+    output dataBus_t              o_id_reg_read_data2,      // RS2 value output
+    output dataBus_t              o_id_imm,                 // Sign-extended immediate value
+    output logic [REG_ADDR-1:0]   o_id_reg_destination,     // Register destination address
+    output logic [2:0]            o_id_funct3,              // funct3 field from instruction
+    output logic [6:0]            o_id_funct7               // funct7 field from instruction
 );
 
 // Extract fields from instruction
@@ -120,6 +121,7 @@ always_ff @(posedge clk or negedge rst_n) begin : proc_id_ex
         o_id_branch           <= 1'b0;
         o_id_mem_to_reg       <= 1'b0;
         o_id_jump             <= 1'b0;
+        o_id_result_src       <= 1'b0;
     end else if (clk_en) begin
         o_id_mem_rd           <= mem_read;
         o_id_mem_wr           <= mem_write;
@@ -137,6 +139,7 @@ always_ff @(posedge clk or negedge rst_n) begin : proc_id_ex
         o_id_reg_read_data1   <= rs1;
         o_id_reg_read_data2   <= rs2;
         o_id_imm              <= immG;
+        o_id_result_src       <= result_src;
     end
 end : proc_id_ex
 
