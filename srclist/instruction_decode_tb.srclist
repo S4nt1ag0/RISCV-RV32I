@@ -1,6 +1,6 @@
 rtl/riscv_definitions.sv
-rtl/register_file.sv
-rtl/sign_extend.sv
-rtl/controller.sv
-rtl/instruction_decode.sv
-tb/instruction_decode_tb.sv
+rtl/instruction_decode/register_file.sv
+rtl/instruction_decode/sign_extend.sv
+rtl/instruction_decode/controller.sv
+rtl/instruction_decode/instruction_decode.sv
+tb/instruction_decode/instruction_decode_tb.sv

@@ -1,6 +1,6 @@
 rtl/riscv_definitions.sv
-rtl/mux2to1.sv
-rtl/alu.sv
-rtl/branch_unit.sv
-rtl/execution.sv
-tb/execution_tb.sv
+rtl/utils/mux2to1.sv
+rtl/execution/alu.sv
+rtl/execution/branch_unit.sv
+rtl/execution/execution.sv
+tb/execution/execution_tb.sv
