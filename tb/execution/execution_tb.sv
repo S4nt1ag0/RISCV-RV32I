@@ -74,7 +74,7 @@ module execution_tb;
   } test_vector_t;
 
   // Instância do módulo
-  execution uut (
+  execution dut (
     .clk(clk),
     .clk_en(clk_en),
     .rst_n(rst_n),
