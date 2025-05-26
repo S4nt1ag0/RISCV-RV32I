@@ -31,8 +31,8 @@ module controller (
 
     output aluOpType              o_alu_control,
     output logic                  o_reg_write,
-    output aluSrc1_e             o_alu_src1,
-    output aluSrc2_e             o_alu_src2,
+    output aluSrc1_e              o_alu_src1,
+    output aluSrc2_e              o_alu_src2,
     output logic                  o_mem_write,
     output logic                  o_mem_read,
     output logic                  o_mem_to_reg,

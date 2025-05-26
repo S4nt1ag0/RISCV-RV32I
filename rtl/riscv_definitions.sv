@@ -150,25 +150,23 @@ Description:
  *     instruction formats and function codes (funct7/funct3 combinations).
  *     Also includes pseudo-operations for comparisons and bypassing.
  */
-    typedef enum logic [4:0] {
-        ALU_ADD    = 5'b00000, // funct7 = 0000000, funct3 = 000 (ADD)
-        ALU_SLL    = 5'b00001, // funct7 = 0000000, funct3 = 001 (SLL)
-        ALU_SLT    = 5'b00010, // funct7 = 0000000, funct3 = 010 (SLT)
-        ALU_SLTU   = 5'b00011, // funct7 = 0000000, funct3 = 011 (SLTU)
-        ALU_XOR    = 5'b00100, // funct7 = 0000000, funct3 = 100 (XOR)
-        ALU_SRL    = 5'b00101, // funct7 = 0000000, funct3 = 101 (SRL)
-        ALU_OR     = 5'b00110, // funct7 = 0000000, funct3 = 110 (OR)
-        ALU_AND    = 5'b00111, // funct7 = 0000000, funct3 = 111 (AND)
-        ALU_SUB    = 5'b01000, // funct7 = 0100000, funct3 = 000 (SUB)
-        ALU_SRA    = 5'b01001, // funct7 = 0100000, funct3 = 101 (SRA)
+    typedef enum logic [3:0] {
+        ALU_ADD    = 4'b0000, // funct7 = 0000000, funct3 = 000 (ADD)
+        ALU_SLL    = 4'b0001, // funct7 = 0000000, funct3 = 001 (SLL)
+        ALU_LT     = 4'b0010, // funct7 = 0000000, funct3 = 010 (SLT)
+        ALU_LTU    = 4'b0011, // funct7 = 0000000, funct3 = 011 (SLTU)
+        ALU_XOR    = 4'b0100, // funct7 = 0000000, funct3 = 100 (XOR)
+        ALU_SRL    = 4'b0101, // funct7 = 0000000, funct3 = 101 (SRL)
+        ALU_OR     = 4'b0110, // funct7 = 0000000, funct3 = 110 (OR)
+        ALU_AND    = 4'b0111, // funct7 = 0000000, funct3 = 111 (AND)
+        ALU_SUB    = 4'b1000, // funct7 = 0100000, funct3 = 000 (SUB)
+        ALU_SRA    = 4'b1001, // funct7 = 0100000, funct3 = 101 (SRA)
 
-        ALU_BPS2   = 5'b01010, // Bypass source 2
-        ALU_EQUAL  = 5'b01011, // Equal comparison (==)
-        ALU_NEQUAL = 5'b01100, // Not equal (!=)
-        ALU_LT     = 5'b01101, // Signed less than (<)
-        ALU_GT     = 5'b01110, // Signed Greater/Equal than (>=)
-        ALU_LTU    = 5'b01111, // Unsigned less than (<)
-        ALU_GTU    = 5'b10000  // Unsigned Greater/Equal than (>=)
+        ALU_BPS2   = 4'b1010, // Bypass source 2
+        ALU_EQUAL  = 4'b1011, // Equal comparison (==)
+        ALU_NEQUAL = 4'b1100, // Not equal (!=)
+        ALU_GT     = 4'b1101, // Signed Greater/Equal than (>=)
+        ALU_GTU    = 4'b1111  // Unsigned Greater/Equal than (>=)
     } aluOpType;
 
 /* 
