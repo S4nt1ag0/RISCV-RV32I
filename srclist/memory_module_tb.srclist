@@ -1,0 +1,3 @@
+rtl/memory_module.sv
+rtl/rams_sp_wf.v
+tb/memory_module_tb.sv
