@@ -15,7 +15,7 @@ import riscv_definitions::*; // Import package with types and constants
  *
  **/
 
-module execution (
+module RISCV (
     input  logic         clk,                 // Clock signal
     input  logic         rst_n,               // Asynchronous reset (active low)
 
@@ -68,6 +68,11 @@ logic [6:0] id_funct7;
 logic [1:0] id_result_src;
 aluOpType id_alu_op;
 
+// ==== Memory Access Stage ====
+logic [REG_ADDR-1:0] ma_reg_destination;
+logic ma_reg_wr;
+
+
 instruction_decode id_stage (
     .clk(clk),
     .clk_en(id_clk_en),
@@ -107,7 +112,7 @@ logic [REG_ADDR-1:0] ex_reg_destination;
 logic [2:0] ex_funct3;
 logic [6:0] ex_funct7;
 
-execute ex_stage (
+execution ex_stage (
     .clk(clk),
     .clk_en(ex_clk_en),
     .rst_n(rst_n),
@@ -147,10 +152,8 @@ execute ex_stage (
 logic ma_mem_to_reg;
 logic [1:0] ma_rw_sel;
 logic [31:0] ma_pc_plus_4, ma_read_data, ma_result;
-logic [REG_ADDR-1:0] ma_reg_destination;
-logic ma_reg_wr;
 
-memory_module ma_stage (
+memory_access ma_stage (
     .i_clk(clk),
     .i_rst_n(rst_n),
     .i_clk_en(ma_clk_en),

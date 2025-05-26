@@ -1,6 +1,6 @@
 `timescale 1ns / 1ps
 
-module riscv_core_tb;
+module RISCV_tb;
 
   // Clock and reset
   logic clk;
@@ -22,7 +22,7 @@ module riscv_core_tb;
   logic         o_data_wr_en_ma;
 
   // DUT instantiation
-  execution dut (
+  RISCV dut (
     .clk(clk),
     .rst_n(rst_n),
     .i_instr_ready(i_instr_ready),
@@ -53,11 +53,7 @@ module riscv_core_tb;
     i_instr_ready = 1;
     i_data_ready  = 1;
 
-    // Load a sample instruction (e.g., addi x1, x0, 10)
-    // Encoding: 0x00A00093
-    i_instr_data = '0;
-    i_instr_data.valid = 1;
-    i_instr_data.data  = 32'h00A00093;
+    i_instr_data = 32'h00A00093; // addi x1, x0, 10
 
     // Data memory dummy values
     i_data_rd = '0;
@@ -66,7 +62,7 @@ module riscv_core_tb;
     #100;
 
     // Test another instruction
-    i_instr_data.data = 32'h00108093; // addi x1, x1, 1
+    i_instr_data = 32'h00108093; // addi x1, x1, 1
 
     #100;
 

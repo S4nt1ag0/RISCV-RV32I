@@ -3,5 +3,6 @@ srclist/instruction_decode_tb.srclist
 srclist/execution_tb.srclist
 srclist/memory_access_tb.srclist
 srclist/write_back_tb.srclist
-rlt/RISCV.sv
+srclist/hazard_control_tb.srclist
+rtl/RISCV.sv
 tb/RISCV_tb.sv
