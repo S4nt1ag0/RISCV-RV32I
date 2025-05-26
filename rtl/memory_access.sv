@@ -16,14 +16,12 @@
 module memory_access(
     input  logic i_clk,
     input  logic i_rst_n,
-
-    input logic ENTRADAS,
-    input logic SAIDAS,
-    input logic RAM_Signals,
-
-    // Entradas
     input logic        i_clk_en,
+
+    //Entrada memory module
     input logic [31:0] i_data_rd,
+
+    //Entradas Before Stage
     input logic        i_ex_mem_to_reg,
     input logic  [1:0] i_ex_rw_sel,
     input logic        i_ex_reg_wr,
@@ -36,9 +34,14 @@ module memory_access(
     input logic  [2:0] i_ex_funct3,
     input logic  [6:0] i_ex_funct7,
 
-    // Saídas
-    output logic  [1:0] o_data_rd_en_ctrl,
-    output logic        o_ma_ram_en,
+    //Saídas  memory module
+    output dataBus_t     o_data_wr,           // Data memory write data
+    output dataBus_t     o_data_addr,         // Data memory address
+    output logic [1:0]   o_data_rd_en_ctrl,   // Control for data memory read
+    output logic         o_data_rd_en_ma,     // Enable data memory read (memory access)
+    output logic         o_data_wr_en_ma,      // Enable data memory write (memory access)
+
+    // Saídas next Stage
     output logic        o_ma_mem_to_reg,
     output logic  [1:0] o_ma_rw_sel,
     output logic [31:0] o_ma_pc_plus_4,
@@ -47,21 +50,19 @@ module memory_access(
     output logic  [4:0] o_ma_reg_dest,
     output logic        o_ma_reg_wr
 );
-
-    // Sinais internos para a RAM
-    logic        i_ram_en;   
-    logic        i_ram_we;
-    logic        i_ram_rd;
-    logic [9:0]  i_ram_addr;
-    logic [31:0] i_ram_di;
-    logic [31:0] o_ram_dout;
     
-    logic        ram_en_wr;
-    logic        ram_en_rd;
+    assign o_data_wr = i_ex_reg_read_data2;
+    assign o_data_addr = i_ex_alu_result;
+    assign o_data_rd_en_ctrl = (i_ex_alu_result);
+    assign o_data_rd_en_ma = i_ex_mem_rd;
+    assign o_data_wr_en_ma = i_ex_mem_wr;
 
-        assign ram_en_wr = i_ram_en & i_ex_mem_wr;             // Habilita escrita (wr = 1 e en = 1)
-        assign ram_en_rd = i_ram_en & i_ex_mem_rd;             // Habilita leitura (rd = 1 e en = 1)
-        assign o_ma_read_data = i_data_rd;                     // Dado lido da memória
+    case (i_ex_funct3)
+                3'b000: assign o_data_rd_en_ctrl <= 2'b00; // byte
+                3'b001: assign o_data_rd_en_ctrl <= 2'b01; // half-word
+                3'b010: assign o_data_rd_en_ctrl <= 2'b10; // word
+               default: assign o_data_rd_en_ctrl <= 2'b11; // reservado
+    endcase
 
     always_ff @(posedge i_clk or negedge i_rst_n) begin
         if (!i_rst_n) begin
@@ -74,50 +75,16 @@ module memory_access(
             o_ma_reg_dest      <= 0;
             o_ma_reg_wr        <= 0;
             o_data_rd_en_ctrl  <= 0;
-            o_ma_ram_en        <= 1;
         
         end else if (i_clk_en) begin         
-
-            // Propagação dos sinais (Pipeline)
                 
-            o_ma_mem_to_reg <= i_ex_mem_to_reg;  
-            o_ma_rw_sel     <= i_ex_rw_sel;
-            o_ma_reg_wr     <= i_ex_reg_wr;
-            o_ma_pc_plus_4  <= i_ex_pc_plus_4;
-            o_ma_result     <= i_ex_alu_result;
-            o_ma_reg_dest   <= i_ex_reg_dest;
-
-            // Configura sinais para a RAM
-            //ram_addr    = i_ex_alu_result[9:0];           // Endereço da RAM
-            //ram_data_in = i_ex_reg_read_data2[31:0];      // Dado a ser escrito       
-
-
-            //ram_we = i_ex_mem_wr;
-
-
-            // Etapa de controle de escrita/leitura da memória
-
-            // Operação de escrita
-            if (ram_en_wr) begin
-                i_ram_di[i_ex_alu_result[9:0]] <= i_ex_reg_read_data2;
-            end
-
-            // Operação de leitura
-            if (ram_en_rd) begin
-                //o_ma_read_data <= memory_array[i_ex_alu_result[9:0]];
-                //i_data_rd <= o_ram_dout[i_ex_alu_result[9:0]]; 
-                o_ma_read_data <= o_ram_dout;
-            end
-
-
-
-            // Controle de tamanho
-            case (i_ex_funct3)
-                3'b000: o_data_rd_en_ctrl <= 2'b00; // byte
-                3'b001: o_data_rd_en_ctrl <= 2'b01; // half-word
-                3'b010: o_data_rd_en_ctrl <= 2'b10; // word
-               default: o_data_rd_en_ctrl <= 2'b11; // reservado
-            endcase
+            o_ma_mem_to_reg    <= i_ex_mem_to_reg;
+            o_ma_rw_sel        <= i_ex_rw_sel;
+            o_ma_pc_plus_4     <= i_ex_pc_plus_4;
+            o_ma_read_data     <= i_data_rd;
+            o_ma_result        <= i_ex_alu_result;
+            o_ma_reg_dest      <= i_ex_reg_dest;
+            o_ma_reg_wr        <= i_ex_reg_wr;
         end
     end
 endmodule
