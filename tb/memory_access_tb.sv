@@ -1,6 +1,6 @@
 `timescale 1ns / 1ps
 
-module memory_module_tb;
+module memory_access_tb;
 
     // Sinais de controle
     logic i_clk;
@@ -59,10 +59,11 @@ module memory_module_tb;
     );
 
     // Instância do DUT
-    memory_module dut (
+    memory_access dut (
         .i_clk(i_clk),
         .i_rst_n(i_rst_n),
         .i_clk_en(i_clk_en),
+        .i_data_rd(i_data_rd),
         .i_ex_mem_to_reg(i_ex_mem_to_reg),
         .i_ex_rw_sel(i_ex_rw_sel),
         .i_ex_reg_wr(i_ex_reg_wr),

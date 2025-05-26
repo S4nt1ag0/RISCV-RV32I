@@ -5,7 +5,7 @@
 // 
 // Create Date: 05/21/2025 03:42:48 PM
 // Design Name: 
-// Module Name: memory_module
+// Module Name: memory_access
 // Project Name: 
 // Target Devices: 
 // Tool Versions: 
@@ -13,7 +13,7 @@
 // 
 //////////////////////////////////////////////////////////////////////////////////
 
-module memory_module(
+module memory_access(
     input  logic i_clk,
     input  logic i_rst_n,
 
@@ -23,7 +23,7 @@ module memory_module(
 
     // Entradas
     input logic        i_clk_en,
-    //input logic [31:0] i_data_rd,
+    input logic [31:0] i_data_rd,
     input logic        i_ex_mem_to_reg,
     input logic  [1:0] i_ex_rw_sel,
     input logic        i_ex_reg_wr,
@@ -58,27 +58,6 @@ module memory_module(
     
     logic        ram_en_wr;
     logic        ram_en_rd;
-    logic [31:0] i_data_rd;
-
-    // Instancia a RAM
-    rams_sp_wf ram_inst (
-        //.i_ram_clk(i_clk),
-        //.i_ram_en(i_ram_en),
-        //.i_ram_we(i_ram_we),
-        //.i_ram_rd(i_ram_rd),
-        //.i_ram_en(i_ram_en),
-        //.i_ram_addr(i_ram_addr),
-        //.i_ram_di(i_ram_di),
-        //.o_ram_dout(o_ram_dout)
-
-        .i_ram_clk(i_clk),
-        .i_ram_en(o_ma_ram_en),
-        .i_ram_we(i_ex_mem_wr),
-        .i_ram_rd(i_ex_mem_rd),
-        .i_ram_addr(i_ex_alu_result),
-        .i_ram_di(i_ex_reg_read_data2),
-        .o_ram_dout(i_data_rd)
-    );
 
         assign ram_en_wr = i_ram_en & i_ex_mem_wr;             // Habilita escrita (wr = 1 e en = 1)
         assign ram_en_rd = i_ram_en & i_ex_mem_rd;             // Habilita leitura (rd = 1 e en = 1)
