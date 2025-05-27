@@ -10,7 +10,7 @@ module memory_access_tb;
     // Inputs
     logic [31:0] i_data_rd;
     logic        i_ex_mem_to_reg;
-    logic  [1:0] i_ex_rw_sel;
+    logic        i_ex_rw_sel;
     logic        i_ex_reg_wr;
     logic        i_ex_mem_rd;
     logic        i_ex_mem_wr;
@@ -29,7 +29,7 @@ module memory_access_tb;
     logic        o_data_wr_en_ma;
 
     logic        o_ma_mem_to_reg;
-    logic  [1:0] o_ma_rw_sel;
+    logic        o_ma_rw_sel;
     logic [31:0] o_ma_pc_plus_4;
     logic [31:0] o_ma_read_data;
     logic [31:0] o_ma_result;
@@ -79,7 +79,7 @@ module memory_access_tb;
     );
         i_data_rd           = data_from_mem;
         i_ex_mem_to_reg     = 1;
-        i_ex_rw_sel         = 2'b01;
+        i_ex_rw_sel         = 1;
         i_ex_reg_wr         = 1;
         i_ex_mem_rd         = 1;
         i_ex_mem_wr         = 0;
