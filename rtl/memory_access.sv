@@ -1,123 +1,101 @@
 `timescale 1ns / 1ps
-//////////////////////////////////////////////////////////////////////////////////
-// Company: 
-// Engineer: 
-// 
-// Create Date: 05/21/2025 03:42:48 PM
-// Design Name: 
-// Module Name: memory_access
-// Project Name: 
-// Target Devices: 
-// Tool Versions: 
-// Description: Modificado para integração com rams_sp_wf
-// 
-//////////////////////////////////////////////////////////////////////////////////
+
+/**
+ * Module: memory_access
+ * Description:
+ *     Implements the Memory Access (MEM) stage of a 5-stage RISC-V pipeline.
+ *     This stage handles data memory reads and writes, and applies data alignment 
+ *     and extension logic for various load instructions.
+ **/
 
 module memory_access(
-    input  logic i_clk,
-    input  logic i_rst_n,
+    input  logic        clk,               // System clock
+    input  logic        rst_n,             // Active-low reset
+    input  logic        clk_en,            // Clock enable
 
-    input logic ENTRADAS,
-    input logic SAIDAS,
-    input logic RAM_Signals,
+    // Data read from memory
+    input  logic [31:0] i_data_rd,           // Data read from memory
 
-    // Entradas
-    input logic        i_clk_en,
-    input logic [31:0] i_data_rd,
-    input logic        i_ex_mem_to_reg,
-    input logic  [1:0] i_ex_rw_sel,
-    input logic        i_ex_reg_wr,
-    input logic        i_ex_mem_rd,
-    input logic        i_ex_mem_wr,
-    input logic [31:0] i_ex_pc_plus_4,
-    input logic [31:0] i_ex_alu_result,
-    input logic [31:0] i_ex_reg_read_data2,
-    input logic  [4:0] i_ex_reg_dest,
-    input logic  [2:0] i_ex_funct3,
-    input logic  [6:0] i_ex_funct7,
+    // Signals from Execute stage
+    input  logic        i_ex_mem_to_reg,     // Mem-to-reg signal from EX stage
+    input  logic        i_ex_rw_sel,         // Write-back result selection
+    input  logic        i_ex_reg_wr,         // Register write enable
+    input  logic        i_ex_mem_rd,         // Memory read enable
+    input  logic        i_ex_mem_wr,         // Memory write enable
+    input  logic [31:0] i_ex_pc_plus_4,      // PC + 4
+    input  logic [31:0] i_ex_alu_result,     // ALU result (memory address)
+    input  logic [31:0] i_ex_reg_read_data2, // Value to write to memory
+    input  logic  [4:0] i_ex_reg_dest,       // Destination register
+    input  logic  [2:0] i_ex_funct3,         // funct3 field (determines load type)
+    input  logic  [6:0] i_ex_funct7,         // funct7 (not used here)
 
-    // Saídas
-    output logic  [1:0] o_data_rd_en_ctrl,
-    output logic        o_ma_ram_en,
-    output logic        o_ma_mem_to_reg,
-    output logic  [1:0] o_ma_rw_sel,
-    output logic [31:0] o_ma_pc_plus_4,
-    output logic [31:0] o_ma_read_data,
-    output logic [31:0] o_ma_result,
-    output logic  [4:0] o_ma_reg_dest,
-    output logic        o_ma_reg_wr
+    // Outputs to memory module
+    output logic [31:0] o_data_wr,           // Data to write to memory
+    output logic [31:0] o_data_addr,         // Address for memory access
+    output logic  [1:0] o_data_rd_en_ctrl,   // Memory read size: 00=B, 01=H, 10=W
+    output logic        o_data_rd_en_ma,     // Read enable for memory
+    output logic        o_data_wr_en_ma,     // Write enable for memory
+
+    // Outputs to Write Back stage
+    output logic        o_ma_mem_to_reg,     // Forwarded mem-to-reg signal
+    output logic        o_ma_rw_sel,         // Forwarded write-back result select
+    output logic [31:0] o_ma_pc_plus_4,      // Forwarded PC + 4
+    output logic [31:0] o_ma_read_data,      // Loaded data from memory (processed)
+    output logic [31:0] o_ma_result,         // Forwarded ALU result
+    output logic  [4:0] o_ma_reg_dest,       // Forwarded destination register
+    output logic        o_ma_reg_wr          // Forwarded register write enable
 );
 
-    // Sinais internos para a RAM
-    logic        i_ram_en;   
-    logic        i_ram_we;
-    logic        i_ram_rd;
-    logic [9:0]  i_ram_addr;
-    logic [31:0] i_ram_di;
-    logic [31:0] o_ram_dout;
-    
-    logic        ram_en_wr;
-    logic        ram_en_rd;
+    // Direct connections to memory
+    assign o_data_wr       = i_ex_reg_read_data2;
+    assign o_data_addr     = i_ex_alu_result;
+    assign o_data_rd_en_ma = i_ex_mem_rd;
+    assign o_data_wr_en_ma = i_ex_mem_wr;
 
-        assign ram_en_wr = i_ram_en & i_ex_mem_wr;             // Habilita escrita (wr = 1 e en = 1)
-        assign ram_en_rd = i_ram_en & i_ex_mem_rd;             // Habilita leitura (rd = 1 e en = 1)
-        assign o_ma_read_data = i_data_rd;                     // Dado lido da memória
+    // Determine memory access type (byte, half-word, word)
+    always_comb begin
+        case (i_ex_funct3)
+            3'b000: o_data_rd_en_ctrl = 2'b00; // LB or LBU
+            3'b001: o_data_rd_en_ctrl = 2'b01; // LH or LHU
+            3'b010: o_data_rd_en_ctrl = 2'b10; // LW
+            default: o_data_rd_en_ctrl = 2'b11; // Reserved / invalid
+        endcase
+    end
 
-    always_ff @(posedge i_clk or negedge i_rst_n) begin
-        if (!i_rst_n) begin
-         
-            o_ma_mem_to_reg    <= 0;
-            o_ma_rw_sel        <= 0;
-            o_ma_pc_plus_4     <= 0;
-            o_ma_read_data     <= 0;
-            o_ma_result        <= 0;
-            o_ma_reg_dest      <= 0;
-            o_ma_reg_wr        <= 0;
-            o_data_rd_en_ctrl  <= 0;
-            o_ma_ram_en        <= 1;
-        
-        end else if (i_clk_en) begin         
+    // Main pipeline register and read data logic
+    always_ff @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            o_ma_mem_to_reg   <= 0;
+            o_ma_rw_sel       <= 0;
+            o_ma_pc_plus_4    <= 0;
+            o_ma_read_data    <= 0;
+            o_ma_result       <= 0;
+            o_ma_reg_dest     <= 0;
+            o_ma_reg_wr       <= 0;
+        end else if (clk_en) begin
+            o_ma_mem_to_reg   <= i_ex_mem_to_reg;
+            o_ma_rw_sel       <= i_ex_rw_sel;
+            o_ma_pc_plus_4    <= i_ex_pc_plus_4;
+            o_ma_result       <= i_ex_alu_result;
+            o_ma_reg_dest     <= i_ex_reg_dest;
+            o_ma_reg_wr       <= i_ex_reg_wr;
 
-            // Propagação dos sinais (Pipeline)
-                
-            o_ma_mem_to_reg <= i_ex_mem_to_reg;  
-            o_ma_rw_sel     <= i_ex_rw_sel;
-            o_ma_reg_wr     <= i_ex_reg_wr;
-            o_ma_pc_plus_4  <= i_ex_pc_plus_4;
-            o_ma_result     <= i_ex_alu_result;
-            o_ma_reg_dest   <= i_ex_reg_dest;
-
-            // Configura sinais para a RAM
-            //ram_addr    = i_ex_alu_result[9:0];           // Endereço da RAM
-            //ram_data_in = i_ex_reg_read_data2[31:0];      // Dado a ser escrito       
-
-
-            //ram_we = i_ex_mem_wr;
-
-
-            // Etapa de controle de escrita/leitura da memória
-
-            // Operação de escrita
-            if (ram_en_wr) begin
-                i_ram_di[i_ex_alu_result[9:0]] <= i_ex_reg_read_data2;
-            end
-
-            // Operação de leitura
-            if (ram_en_rd) begin
-                //o_ma_read_data <= memory_array[i_ex_alu_result[9:0]];
-                //i_data_rd <= o_ram_dout[i_ex_alu_result[9:0]]; 
-                o_ma_read_data <= o_ram_dout;
-            end
-
-
-
-            // Controle de tamanho
+            // Handle memory read data based on funct3
             case (i_ex_funct3)
-                3'b000: o_data_rd_en_ctrl <= 2'b00; // byte
-                3'b001: o_data_rd_en_ctrl <= 2'b01; // half-word
-                3'b010: o_data_rd_en_ctrl <= 2'b10; // word
-               default: o_data_rd_en_ctrl <= 2'b11; // reservado
+                3'b000:  // LB (Load Byte, signed)
+                    o_ma_read_data <= {{24{i_data_rd[7]}}, i_data_rd[7:0]};
+                3'b001:  // LH (Load Half, signed)
+                    o_ma_read_data <= {{16{i_data_rd[15]}}, i_data_rd[15:0]};
+                3'b010:  // LW (Load Word)
+                    o_ma_read_data <= i_data_rd;
+                3'b100:  // LBU (Load Byte, unsigned)
+                    o_ma_read_data <= {24'b0, i_data_rd[7:0]};
+                3'b101:  // LHU (Load Half, unsigned)
+                    o_ma_read_data <= {16'b0, i_data_rd[15:0]};
+                default:
+                    o_ma_read_data <= i_data_rd; // Default fallback
             endcase
         end
     end
+
 endmodule

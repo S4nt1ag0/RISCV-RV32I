@@ -65,12 +65,13 @@ logic signed [DATA_WIDTH-1:0] id_imm;
 logic [REG_ADDR-1:0] id_reg_destination;
 logic [2:0] id_funct3;
 logic [6:0] id_funct7;
-logic [1:0] id_result_src;
+logic id_result_src;
 aluOpType id_alu_op;
 
 // ==== Memory Access Stage ====
 logic [REG_ADDR-1:0] ma_reg_destination;
 logic ma_reg_wr;
+logic [DATA_WIDTH-1:0] wb_data;
 
 
 instruction_decode id_stage (
@@ -106,7 +107,7 @@ instruction_decode id_stage (
 logic ex_flush;
 logic [DATA_WIDTH-1:0] ex_jump_addr;
 logic ex_mem_to_reg, ex_reg_wr, ex_mem_rd, ex_mem_wr;
-logic [1:0] ex_result_src;
+logic ex_result_src;
 logic [DATA_WIDTH-1:0] ex_pc_plus_4, ex_alu_result, ex_data2;
 logic [REG_ADDR-1:0] ex_reg_destination;
 logic [2:0] ex_funct3;
@@ -149,35 +150,45 @@ execution ex_stage (
 );
 
 // ==== Memory Access Stage ====
-logic ma_mem_to_reg;
-logic [1:0] ma_rw_sel;
-logic [31:0] ma_pc_plus_4, ma_read_data, ma_result;
+    logic        ma_mem_to_reg;
+    logic        ma_rw_sel;
+    logic [31:0] ma_pc_plus_4;
+    logic [31:0] ma_read_data;
+    logic [31:0] ma_result;
 
-memory_access ma_stage (
-    .i_clk(clk),
-    .i_rst_n(rst_n),
-    .i_clk_en(ma_clk_en),
-    .i_data_rd(i_data_rd),
-    .i_ex_mem_to_reg(ex_mem_to_reg),
-    .i_ex_rw_sel(ex_result_src),
-    .i_ex_reg_wr(ex_reg_wr),
-    .i_ex_mem_rd(ex_mem_rd),
-    .i_ex_mem_wr(ex_mem_wr),
-    .i_ex_pc_plus_4(ex_pc_plus_4),
-    .i_ex_alu_result(ex_alu_result),
-    .i_ex_reg_read_data2(ex_data2),
-    .i_ex_reg_dest(ex_reg_destination),
-    .i_ex_funct3(ex_funct3),
-    .i_ex_funct7(ex_funct7),
-    .o_data_rd_en_ctrl(o_data_rd_en_ctrl),
-    .o_ma_mem_to_reg(ma_mem_to_reg),
-    .o_ma_rw_sel(ma_rw_sel),
-    .o_ma_pc_plus_4(ma_pc_plus_4),
-    .o_ma_read_data(ma_read_data),
-    .o_ma_result(ma_result),
-    .o_ma_reg_dest(ma_reg_destination),
-    .o_ma_reg_wr(ma_reg_wr)
-);
+    memory_access ma_stage (
+        .clk(clk),
+        .rst_n(rst_n),
+        .clk_en(ma_clk_en),
+
+        .i_data_rd(i_data_rd),
+
+        .i_ex_mem_to_reg(ex_mem_to_reg),
+        .i_ex_rw_sel(ex_result_src),
+        .i_ex_reg_wr(ex_reg_wr),
+        .i_ex_mem_rd(ex_mem_rd),
+        .i_ex_mem_wr(ex_mem_wr),
+        .i_ex_pc_plus_4(ex_pc_plus_4),
+        .i_ex_alu_result(ex_alu_result),
+        .i_ex_reg_read_data2(ex_data2),
+        .i_ex_reg_dest(ex_reg_destination),
+        .i_ex_funct3(ex_funct3),
+        .i_ex_funct7(ex_funct7),
+
+        .o_data_wr(o_data_wr),
+        .o_data_addr(o_data_addr),
+        .o_data_rd_en_ctrl(o_data_rd_en_ctrl),
+        .o_data_rd_en_ma(o_data_rd_en_ma),
+        .o_data_wr_en_ma(o_data_wr_en_ma),
+
+        .o_ma_mem_to_reg(ma_mem_to_reg),
+        .o_ma_rw_sel(ma_rw_sel),
+        .o_ma_pc_plus_4(ma_pc_plus_4),
+        .o_ma_read_data(ma_read_data),
+        .o_ma_result(ma_result),
+        .o_ma_reg_dest(ma_reg_destination),
+        .o_ma_reg_wr(ma_reg_wr)
+    );
 
 // ==== Write Back Stage ====
 WriteBack wb_stage (

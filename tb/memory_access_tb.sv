@@ -2,17 +2,12 @@
 
 module memory_access_tb;
 
-    // Sinais de controle
-    logic i_clk;
-    logic i_rst_n;
+    // Clock and reset
+    logic clk = 0;
+    logic rst_n = 0;
+    logic clk_en = 1;
 
-    // Separadores de waveform
-    logic ENTRADAS;
-    logic SAIDAS;
-    logic RAM_Signals;
-
-    // Entradas
-    logic        i_clk_en;
+    // Inputs
     logic [31:0] i_data_rd;
     logic        i_ex_mem_to_reg;
     logic  [1:0] i_ex_rw_sel;
@@ -26,43 +21,27 @@ module memory_access_tb;
     logic  [2:0] i_ex_funct3;
     logic  [6:0] i_ex_funct7;
 
-    // Saídas
+    // Outputs
+    logic [31:0] o_data_wr;
+    logic [31:0] o_data_addr;
     logic  [1:0] o_data_rd_en_ctrl;
+    logic        o_data_rd_en_ma;
+    logic        o_data_wr_en_ma;
+
     logic        o_ma_mem_to_reg;
     logic  [1:0] o_ma_rw_sel;
     logic [31:0] o_ma_pc_plus_4;
     logic [31:0] o_ma_read_data;
     logic [31:0] o_ma_result;
     logic  [4:0] o_ma_reg_dest;
-    lxogic        o_ma_reg_wr;
-    logic        o_ma_ram_en;
+    logic        o_ma_reg_wr;
 
-
-     // Instancia a RAM
-    rams_sp_wf ram_inst (
-        //.i_ram_clk(i_clk),
-        //.i_ram_en(i_ram_en),
-        //.i_ram_we(i_ram_we),
-        //.i_ram_rd(i_ram_rd),
-        //.i_ram_en(i_ram_en),
-        //.i_ram_addr(i_ram_addr),
-        //.i_ram_di(i_ram_di),
-        //.o_ram_dout(o_ram_dout)
-
-        .i_ram_clk(i_clk),
-        .i_ram_en(o_ma_ram_en),
-        .i_ram_we(i_ex_mem_wr),
-        .i_ram_rd(i_ex_mem_rd),
-        .i_ram_addr(i_ex_alu_result),
-        .i_ram_di(i_ex_reg_read_data2),
-        .o_ram_dout(i_data_rd)
-    );
-
-    // Instância do DUT
+    // DUT
     memory_access dut (
-        .i_clk(i_clk),
-        .i_rst_n(i_rst_n),
-        .i_clk_en(i_clk_en),
+        .clk(clk),
+        .rst_n(rst_n),
+        .clk_en(clk_en),
+
         .i_data_rd(i_data_rd),
         .i_ex_mem_to_reg(i_ex_mem_to_reg),
         .i_ex_rw_sel(i_ex_rw_sel),
@@ -75,7 +54,12 @@ module memory_access_tb;
         .i_ex_reg_dest(i_ex_reg_dest),
         .i_ex_funct3(i_ex_funct3),
         .i_ex_funct7(i_ex_funct7),
+
+        .o_data_wr(o_data_wr),
+        .o_data_addr(o_data_addr),
         .o_data_rd_en_ctrl(o_data_rd_en_ctrl),
+        .o_data_rd_en_ma(o_data_rd_en_ma),
+        .o_data_wr_en_ma(o_data_wr_en_ma),
         .o_ma_mem_to_reg(o_ma_mem_to_reg),
         .o_ma_rw_sel(o_ma_rw_sel),
         .o_ma_pc_plus_4(o_ma_pc_plus_4),
@@ -85,69 +69,70 @@ module memory_access_tb;
         .o_ma_reg_wr(o_ma_reg_wr)
     );
 
-    // Geração do clock
-    initial begin
-        i_clk = 0;
-        forever #5 i_clk = ~i_clk;  // Clock com período de 10 ns
-    end
+    // Clock generation
+    always #5 clk = ~clk;
 
-    // Estímulos de teste
-    initial begin
-        integer i;
-        logic [31:0] base_addr;
-        logic [31:0] data;
-
-        // Inicialização
-        i_rst_n             = 0;
-        i_clk_en            = 0;
+    // Task to apply stimulus
+    task automatic apply_inputs(
+        input logic [2:0] funct3,
+        input logic [31:0] data_from_mem
+    );
+        i_data_rd           = data_from_mem;
+        i_ex_mem_to_reg     = 1;
+        i_ex_rw_sel         = 2'b01;
+        i_ex_reg_wr         = 1;
+        i_ex_mem_rd         = 1;
         i_ex_mem_wr         = 0;
+        i_ex_pc_plus_4      = 32'h00000004;
+        i_ex_alu_result     = 32'h00000010;
+        i_ex_reg_read_data2 = 32'hDEADBEEF;
+        i_ex_reg_dest       = 5'd10;
+        i_ex_funct3         = funct3;
+        i_ex_funct7         = 7'd0;
+    endtask
+
+    initial begin
+        // Init
+        rst_n   = 1;
+        i_data_rd = 0;
+
+       // Reset sequence
+        rst_n = 1;
+        @(posedge clk);
+        repeat (2) @(posedge clk);
+        rst_n = 0;
+        @(posedge clk);
+        rst_n = 1;
+
+        // === Test 1: Load Byte (LB)
+        apply_inputs(3'b000, 32'hFFFFFF80); // Lower byte = 0x80 -> should sign-extend to 0xFFFFFF80
+         @(posedge clk);
+
+        // === Test 2: Load Half (LH)
+        apply_inputs(3'b001, 32'hFFFF8000); // Lower half = 0x8000 -> should sign-extend to 0xFFFF8000
+         @(posedge clk);
+
+        // === Test 3: Load Word (LW)
+        apply_inputs(3'b010, 32'h12345678);
+         @(posedge clk);
+
+        // === Test 4: Load Byte Unsigned (LBU)
+        apply_inputs(3'b100, 32'h000000AB); // -> 0x000000AB
+         @(posedge clk);
+
+        // === Test 5: Load Half Unsigned (LHU)
+        apply_inputs(3'b101, 32'h0000ABCD); // -> 0x0000ABCD
+         @(posedge clk);
+
+        // === Test 6: Store Word
         i_ex_mem_rd         = 0;
-        i_ex_mem_to_reg     = 0;
-        i_ex_rw_sel         = 0;
-        i_ex_reg_wr         = 0;
-        i_ex_pc_plus_4      = 0;
-        i_ex_alu_result     = 0;
-        i_ex_reg_read_data2 = 0;
-        i_ex_reg_dest       = 0;
-        i_ex_funct3         = 0;
-        i_ex_funct7         = 0;
+        i_ex_mem_wr         = 1;
+        i_ex_reg_read_data2 = 32'hCAFEBABE;
+        i_ex_alu_result     = 32'h1000_0000;
+        @(posedge clk);
 
-        base_addr = 32'h00000020;
-
-        #12;
-        i_rst_n = 1;
-        i_clk_en = 1;
-
-        // *** Escrita de 10 valores ***
-        for (i = 0; i < 10; i = i + 1) begin
-            i_ex_mem_wr         = 1;
-            i_ex_mem_rd         = 0;
-            i_ex_alu_result     = base_addr + (i * 4);  // endereços sequenciais de 4 bytes
-            i_ex_reg_read_data2 = {24'h000000, (8'h41 + i)};  // Só o LSB com a letra
-
-            #10;  // Espera um ciclo para escrita
-
-            i_ex_mem_wr = 0;
-            #10;  // Pequeno delay
-        end
-
-        // *** Leitura dos mesmos 10 valores ***
-        for (i = 0; i < 10; i = i + 1) begin
-            i_ex_mem_rd         = 1;
-            i_ex_mem_wr         = 0;
-            i_ex_alu_result     = base_addr + (i * 4);
-
-            #10;  // Espera um ciclo para leitura
-
-            // Mostra o dado lido
-            $display("Endereco: %h, Dado Lido: %h", i_ex_alu_result, o_ma_read_data);
-
-            i_ex_mem_rd = 0;
-            #10;  // Pequeno delay
-        end
-
-        // Finaliza simulação
-        #20;
+        // Finish
+        $display("Simulation finished.");
         $finish;
     end
 
