@@ -9,16 +9,16 @@
  **/
 
 module memory_access(
-    input  logic        i_clk,               // System clock
-    input  logic        i_rst_n,             // Active-low reset
-    input  logic        i_clk_en,            // Clock enable
+    input  logic        clk,               // System clock
+    input  logic        rst_n,             // Active-low reset
+    input  logic        clk_en,            // Clock enable
 
     // Data read from memory
     input  logic [31:0] i_data_rd,           // Data read from memory
 
     // Signals from Execute stage
     input  logic        i_ex_mem_to_reg,     // Mem-to-reg signal from EX stage
-    input  logic  [1:0] i_ex_rw_sel,         // Write-back result selection
+    input  logic        i_ex_rw_sel,         // Write-back result selection
     input  logic        i_ex_reg_wr,         // Register write enable
     input  logic        i_ex_mem_rd,         // Memory read enable
     input  logic        i_ex_mem_wr,         // Memory write enable
@@ -38,7 +38,7 @@ module memory_access(
 
     // Outputs to Write Back stage
     output logic        o_ma_mem_to_reg,     // Forwarded mem-to-reg signal
-    output logic  [1:0] o_ma_rw_sel,         // Forwarded write-back result select
+    output logic        o_ma_rw_sel,         // Forwarded write-back result select
     output logic [31:0] o_ma_pc_plus_4,      // Forwarded PC + 4
     output logic [31:0] o_ma_read_data,      // Loaded data from memory (processed)
     output logic [31:0] o_ma_result,         // Forwarded ALU result
@@ -63,8 +63,8 @@ module memory_access(
     end
 
     // Main pipeline register and read data logic
-    always_ff @(posedge i_clk or negedge i_rst_n) begin
-        if (!i_rst_n) begin
+    always_ff @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
             o_ma_mem_to_reg   <= 0;
             o_ma_rw_sel       <= 0;
             o_ma_pc_plus_4    <= 0;
@@ -72,7 +72,7 @@ module memory_access(
             o_ma_result       <= 0;
             o_ma_reg_dest     <= 0;
             o_ma_reg_wr       <= 0;
-        end else if (i_clk_en) begin
+        end else if (clk_en) begin
             o_ma_mem_to_reg   <= i_ex_mem_to_reg;
             o_ma_rw_sel       <= i_ex_rw_sel;
             o_ma_pc_plus_4    <= i_ex_pc_plus_4;

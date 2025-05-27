@@ -3,9 +3,9 @@
 module memory_access_tb;
 
     // Clock and reset
-    logic i_clk = 0;
-    logic i_rst_n = 0;
-    logic i_clk_en = 1;
+    logic clk = 0;
+    logic rst_n = 0;
+    logic clk_en = 1;
 
     // Inputs
     logic [31:0] i_data_rd;
@@ -38,9 +38,9 @@ module memory_access_tb;
 
     // DUT
     memory_access dut (
-        .i_clk(i_clk),
-        .i_rst_n(i_rst_n),
-        .i_clk_en(i_clk_en),
+        .clk(clk),
+        .rst_n(rst_n),
+        .clk_en(clk_en),
 
         .i_data_rd(i_data_rd),
         .i_ex_mem_to_reg(i_ex_mem_to_reg),
@@ -70,7 +70,7 @@ module memory_access_tb;
     );
 
     // Clock generation
-    always #5 i_clk = ~i_clk;
+    always #5 clk = ~clk;
 
     // Task to apply stimulus
     task automatic apply_inputs(
@@ -93,43 +93,43 @@ module memory_access_tb;
 
     initial begin
         // Init
-        i_rst_n   = 1;
+        rst_n   = 1;
         i_data_rd = 0;
 
        // Reset sequence
-        i_rst_n = 1;
-        @(posedge i_clk);
-        repeat (2) @(posedge i_clk);
-        i_rst_n = 0;
-        @(posedge i_clk);
-        i_rst_n = 1;
+        rst_n = 1;
+        @(posedge clk);
+        repeat (2) @(posedge clk);
+        rst_n = 0;
+        @(posedge clk);
+        rst_n = 1;
 
         // === Test 1: Load Byte (LB)
         apply_inputs(3'b000, 32'hFFFFFF80); // Lower byte = 0x80 -> should sign-extend to 0xFFFFFF80
-         @(posedge i_clk);
+         @(posedge clk);
 
         // === Test 2: Load Half (LH)
         apply_inputs(3'b001, 32'hFFFF8000); // Lower half = 0x8000 -> should sign-extend to 0xFFFF8000
-         @(posedge i_clk);
+         @(posedge clk);
 
         // === Test 3: Load Word (LW)
         apply_inputs(3'b010, 32'h12345678);
-         @(posedge i_clk);
+         @(posedge clk);
 
         // === Test 4: Load Byte Unsigned (LBU)
         apply_inputs(3'b100, 32'h000000AB); // -> 0x000000AB
-         @(posedge i_clk);
+         @(posedge clk);
 
         // === Test 5: Load Half Unsigned (LHU)
         apply_inputs(3'b101, 32'h0000ABCD); // -> 0x0000ABCD
-         @(posedge i_clk);
+         @(posedge clk);
 
         // === Test 6: Store Word
         i_ex_mem_rd         = 0;
         i_ex_mem_wr         = 1;
         i_ex_reg_read_data2 = 32'hCAFEBABE;
         i_ex_alu_result     = 32'h1000_0000;
-        @(posedge i_clk);
+        @(posedge clk);
 
         // Finish
         $display("Simulation finished.");
