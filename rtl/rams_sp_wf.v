@@ -1,46 +1,40 @@
-`timescale 1ns / 1ps
-//////////////////////////////////////////////////////////////////////////////////
-// Company: 
-// Engineer: 
-// 
-// Create Date: 05/23/2025 10:23:23 AM
-// Design Name: 
-// Module Name: rams_sp_wf
-// Project Name: 
-// Target Devices: 
-// Tool Versions: 
-// Description: 
-// 
-// Dependencies: 
-// 
-// Revision:
-// Revision 0.01 - File Created
-// Additional Comments:
-// 
-//////////////////////////////////////////////////////////////////////////////////
+/**
+ * Module: rams_sp_wf
+ * Description:
+ *     Implements a single-port RAM in write-first mode.
+ *     When enabled:
+ *         - On write (`we` = 1), the input data is written to memory and output immediately.
+ *         - On read (`we` = 0), the data at the given address is returned.
+ *     
+ * Parameters:
+ *     - RAM_SIZE: Size of each memory element in bits.
+ *     - RAM_WIDE: Width of each data word.
+ *     - ADDR_WIDTH: Width of address bus (default 32).
+ **/
 
-module rams_sp_wf (i_ram_clk, i_ram_we, i_ram_rd, i_ram_en, i_ram_addr, i_ram_di, o_ram_dout);
+module rams_sp_wf #(
+    parameter RAM_SIZE = 8,
+    parameter RAM_WIDE = 8,
+    parameter ADDR_WIDTH = 32
+)(
+    input                      clk,
+    input                      we,
+    input                      en,
+    input  [ADDR_WIDTH-1:0]    addr,
+    input  [RAM_WIDE-1:0]      di,
+    output reg [RAM_WIDE-1:0]  dout
+);
 
-    input         i_ram_clk;
-    input         i_ram_we;
-    input         i_ram_rd;
-    input         i_ram_en;
-    input  [9:0]  i_ram_addr;
-    input  [31:0] i_ram_di;
-    output reg [31:0] o_ram_dout;   
+    // Internal RAM: 1024 words
+    reg [RAM_SIZE-1:0] RAM [0:1023];
 
-    reg    [31:0] RAM [1023:0];
-
-    always @(posedge i_ram_clk) begin
-        if (i_ram_en) begin
-            // Rotina para escrita
-            if (i_ram_we && !i_ram_rd) begin
-                RAM[i_ram_addr] <= i_ram_di;
-                o_ram_dout <= i_ram_di;
-            end
-            // Rotina para leitura
-            else if(!i_ram_we && i_ram_rd) begin
-                o_ram_dout <= RAM[i_ram_addr];
+    always @(posedge clk) begin
+        if (en) begin
+            if (we) begin
+                RAM[addr] <= di;
+                dout <= di;
+            end else begin
+                dout <= RAM[addr];
             end
         end
     end
