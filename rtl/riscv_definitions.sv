@@ -3,6 +3,7 @@ package riscv_definitions;
 localparam REG_ADDR = 5;
 localparam DATA_WIDTH = 32;
 localparam REG_COUNT = 32;
+localparam RAM_AMOUNT = 4;
 
 
     typedef logic [DATA_WIDTH-1:0] dataBus_t;

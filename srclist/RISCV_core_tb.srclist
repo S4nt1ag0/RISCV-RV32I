@@ -6,4 +6,4 @@ srclist/write_back_tb.srclist
 srclist/hazard_control_tb.srclist
 srclist/memory_tb.srclist
 rtl/RISCV.sv
-tb/RISCV_tb.sv
+tb/RISCV_core_tb.sv
