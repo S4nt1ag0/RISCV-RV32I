@@ -32,7 +32,7 @@ module memory_access(
     // Outputs to memory module
     output logic [31:0] o_data_wr,           // Data to write to memory
     output logic [31:0] o_data_addr,         // Address for memory access
-    output logic  [1:0] o_data_rd_en_ctrl,   // Memory read size: 00=B, 01=H, 10=W
+    output logic  [3:0] o_data_rd_en_ctrl,   // Memory read size: 00=B, 01=H, 10=W
     output logic        o_data_rd_en_ma,     // Read enable for memory
     output logic        o_data_wr_en_ma,     // Write enable for memory
 
@@ -55,10 +55,10 @@ module memory_access(
     // Determine memory access type (byte, half-word, word)
     always_comb begin
         case (i_ex_funct3)
-            3'b000: o_data_rd_en_ctrl = 2'b00; // LB or LBU
-            3'b001: o_data_rd_en_ctrl = 2'b01; // LH or LHU
-            3'b010: o_data_rd_en_ctrl = 2'b10; // LW
-            default: o_data_rd_en_ctrl = 2'b11; // Reserved / invalid
+            3'b000: o_data_rd_en_ctrl = 4'b0001; // LB or LBU
+            3'b001: o_data_rd_en_ctrl = 4'b00111; // LH or LHU
+            3'b010: o_data_rd_en_ctrl = 4'b1111; // LW
+            default: o_data_rd_en_ctrl = 4'b1111; // Reserved / invalid
         endcase
     end
 

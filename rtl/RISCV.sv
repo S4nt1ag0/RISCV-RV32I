@@ -30,7 +30,7 @@ module RISCV (
     input  dataBus_t     i_data_rd,           // Data memory read data
     output dataBus_t     o_data_wr,           // Data memory write data
     output dataBus_t     o_data_addr,         // Data memory address
-    output logic [1:0]   o_data_rd_en_ctrl,   // Control for data memory read
+    output logic [3:0]   o_data_rd_en_ctrl,   // Control for data memory read
     output logic         o_data_rd_en_ma,     // Enable data memory read (memory access)
     output logic         o_data_wr_en_ma      // Enable data memory write (memory access)
 );
