@@ -13,29 +13,29 @@ module instruction_fetch (
     output logic [31:0] if_pc           // PC correspondente à instrução (para o Decode)
 );
     
-    logic [31:0] pc_reg, pc_next;  // Registrador do PC
+    logic [31:0] pc_next;  // Registrador do PC
 
     assign inst_rd_enable = 1'b1;     // instr_ready sempre high
 
-    assign inst_addr = pc_reg;      // Endereço da instrução a ser buscada recebe o PC atual
+    assign inst_addr = pc_next;      // Endereço da instrução a ser buscada recebe o PC atual
 
     // Saída da instrução recebida e PC
     always_ff @(posedge clk or negedge rst_n) begin
     // Inicializa
         if (!rst_n) begin
-            pc_reg  <= 32'd0;         // Inicializa o PC em zero
+            pc_next  <= 32'd0;         // Inicializa o PC em zero
             if_inst <= 32'd0;         // Inicializa a instrução como sendo zero 
             if_pc   <= 32'd0;
      // Execução
         end else if (clk_en) begin
             if (flush) begin
-                pc_reg  <= jump_addr; // Se flush, o PC vai para jump_addr
+                pc_next  <= jump_addr; // Se flush, o PC vai para jump_addr
             end else begin
-                pc_reg  <= pc_reg + 32'd4; // PC + 4, vai para próximo endereço
+                pc_next  <= pc_next + 32'd4; // PC + 4, vai para próximo endereço
             end
             // Manda a instrução lida e PC para o Decode
             if_inst <= inst_data;
-            if_pc   <= pc_reg;
+            if_pc   <= pc_next;
         end
         // Se clk_en == 0: mantem valor atual
     end

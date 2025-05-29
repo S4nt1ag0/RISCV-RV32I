@@ -121,7 +121,7 @@ module RISCV_tb;
       inst_wr     = mem_array[i];
       inst_wr_en  = 1;
       inst_ctrl   = 4'b1111;
-      init_addr   = i; 
+      init_addr   = (4*i); 
     end
 
     @(posedge clk);
@@ -141,10 +141,10 @@ module RISCV_tb;
       if (data_wr_en_ma) begin
         if ((data_addr === 100) && (data_rd === 25)) begin
           $display("\n=== Simulation Succeeded ===\n");
-          $stop;
+          $finish;;
         end else if (data_addr !== 96) begin
           $display("\n!!! Simulation Failed !!!\n");
-          $stop;
+          $finish;;
         end
       end
     end
