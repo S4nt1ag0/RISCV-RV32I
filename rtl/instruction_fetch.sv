@@ -1,43 +1,56 @@
-module instruction_fetch (
+/**
+ * Module: instruction_fetch
+ * Description:
+ *     Implements the Instruction Fetch (IF) stage of a 5-stage RISC-V pipeline processor.
+ *     This module is responsible for generating the program counter (PC), issuing instruction fetch
+ *     requests, handling control flow changes (branches/jumps), and passing the fetched instruction
+ *     and corresponding PC to the next pipeline stage.
+ */
 
-    input  logic        clk,            // Clock principal
-    input  logic        rst_n,          // Reset assíncrono ativo baixo
-    input  logic        clk_en,         // Enable para avançar (stall)
-    input  logic        flush,          // Força atualização do PC (branch/jump)
-    input  logic [31:0] jump_addr,      // Novo endereço do PC para desvio
-    input  logic [31:0] inst_data,      // Instrução vinda da memória de instruções
+ module instruction_fetch (
+    input  logic        clk,              // Main clock
+    input  logic        rst_n,            // Asynchronous active-low reset
+    input  logic        clk_en,           // Clock enable (stall control)
 
-    output logic        inst_rd_enable, // Habilita a leitura da memória de instruções
-    output logic [31:0] inst_addr,      // Endereço do PC para a busca de instrução
-    output logic [31:0] if_inst,        // Instrução lida (para o Decode)
-    output logic [31:0] if_pc           // PC correspondente à instrução (para o Decode)
+    input  logic        i_flush,          // Forces PC update (branch/jump)
+    input  logic [31:0] i_jump_addr,      // New PC address in case of flush
+    input  logic [31:0] i_inst_data,      // Instruction data from memory
+
+    output logic        o_inst_rd_enable, // Enable signal to read instruction memory
+    output logic [31:0] o_inst_addr,      // PC value used for instruction fetch
+    output logic [31:0] o_if_inst,        // Output instruction to Decode stage
+    output logic [31:0] o_if_pc           // Output PC to Decode stage
 );
-    
-    logic [31:0] pc_next;  // Registrador do PC
 
-    assign inst_rd_enable = 1'b1;     // instr_ready sempre high
+logic [31:0] pc_next;  // Next PC (calculated combinationally)
 
-    assign inst_addr = pc_next;      // Endereço da instrução a ser buscada recebe o PC atual
+// Always enable instruction memory read
+assign o_inst_rd_enable = 1'b1;
 
-    // Saída da instrução recebida e PC
-    always_ff @(posedge clk or negedge rst_n) begin
-    // Inicializa
-        if (!rst_n) begin
-            pc_next  <= 32'd0;         // Inicializa o PC em zero
-            if_inst <= 32'd0;         // Inicializa a instrução como sendo zero 
-            if_pc   <= 32'd0;
-     // Execução
-        end else if (clk_en) begin
-            if (flush) begin
-                pc_next  <= jump_addr; // Se flush, o PC vai para jump_addr
-            end else begin
-                pc_next  <= pc_next + 32'd4; // PC + 4, vai para próximo endereço
-            end
-            // Manda a instrução lida e PC para o Decode
-            if_inst <= inst_data;
-            if_pc   <= pc_next;
-        end
-        // Se clk_en == 0: mantem valor atual
+// Address to fetch instruction from is the current PC
+assign o_inst_addr = pc_next;
+
+// Sequential logic to update PC and outputs
+always_ff @(posedge clk or negedge rst_n) begin
+    if (!rst_n) begin
+        o_if_inst <= 32'd0;
+        o_if_pc   <= 32'd0;
+    end else if (clk_en) begin
+        o_if_inst <= i_inst_data;   // Capture fetched instruction
+        o_if_pc   <= pc_next;            // Capture current PC (before update)
     end
+end
+
+always_ff @(posedge clk or negedge rst_n) begin: proc_next_pc
+    if(!rst_n) begin
+        pc_next <= 'b0;
+    end else if(clk_en) begin
+        if (i_flush) begin
+            pc_next <= i_jump_addr;
+        end else begin
+            pc_next <= pc_next + 32'd4;
+        end
+    end
+end: proc_next_pc
 
 endmodule

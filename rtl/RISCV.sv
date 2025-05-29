@@ -48,13 +48,13 @@ instruction_fetch if_stage (
     .clk(clk),
     .rst_n(rst_n),
     .clk_en(if_clk_en),
-    .flush(flush),
-    .jump_addr(jump_addr),
-    .inst_data(i_instr_data),
-    .inst_rd_enable(o_inst_rd_en),
-    .inst_addr(o_inst_addr),
-    .if_inst(if_inst),
-    .if_pc(if_pc)
+    .i_flush(flush),
+    .i_jump_addr(jump_addr),
+    .i_inst_data(i_instr_data),
+    .o_inst_rd_enable(o_inst_rd_en),
+    .o_inst_addr(o_inst_addr),
+    .o_if_inst(if_inst),
+    .o_if_pc(if_pc)
 );
 
 // ==== Instruction Decode Stage ====
