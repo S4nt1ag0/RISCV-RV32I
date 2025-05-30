@@ -205,7 +205,9 @@ hazard_control hc (
     .i_id_reg_src1(if_inst[19:15]),     // rs1 from instruction
     .i_id_reg_src2(if_inst[24:20]),     // rs2 from instruction
     .i_ex_reg_dest(ex_reg_destination),
+    .i_ex_reg_wr(ex_mem_wr),
     .i_ma_reg_dest(ma_reg_destination),
+    .i_ma_reg_wr(ma_reg_wr),
     .i_id_branch(id_branch),
     .o_if_clk_en(if_clk_en),
     .o_id_clk_en(id_clk_en),

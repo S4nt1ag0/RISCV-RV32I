@@ -84,7 +84,6 @@ controller id_controller (
 // Register File
 register_file id_reg_file (
     .i_clk(clk),
-    .i_clk_en(clk_en),
     .i_rst_n(rst_n),
     .i_read_register1_addr(read_reg1_addr),
     .i_read_register2_addr(read_reg2_addr),

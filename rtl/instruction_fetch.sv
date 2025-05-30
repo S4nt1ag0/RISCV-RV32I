@@ -24,6 +24,7 @@ import riscv_definitions::*; // Import package with types and constants
     output logic [31:0] o_if_pc           // Output PC to Decode stage
 );
 logic [DATA_WIDTH-1:0] pc;
+logic [31:0] pc_current;
 logic [DATA_WIDTH-1:0] pc_mux_data;
 logic [DATA_WIDTH-1:0] pc_adder_data;
 
@@ -55,7 +56,12 @@ always_ff @(posedge clk or negedge rst_n) begin
     if (!rst_n) begin
         pc   <= 32'd0;
     end else if (clk_en) begin
+        pc_current <= pc;
         pc   <= pc_mux_data;                 // Capture current PC (before update)
+    end
+    else begin 
+        pc_current <= pc_current;
+        pc   <= pc;                 // Capture current PC (before update)
     end
 end
 
@@ -68,7 +74,11 @@ always_ff @(posedge clk or negedge rst_n) begin
         o_if_pc   <= 32'd0;
     end else if (clk_en) begin
         o_if_inst <= i_inst_data;            // Capture fetched instruction
-        o_if_pc   <= pc;                     // Capture current PC (before update)
+        o_if_pc   <= pc_current;             // Capture current PC (before update)
+    end
+    else begin 
+        o_if_inst <= o_if_inst;
+        o_if_pc   <= o_if_pc;                 // Capture current PC (before update)
     end
 
 end
