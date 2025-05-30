@@ -104,8 +104,6 @@ instruction_decode id_stage (
 );
 
 // ==== Execute Stage ====
-logic ex_flush;
-logic [DATA_WIDTH-1:0] ex_jump_addr;
 logic ex_mem_to_reg, ex_reg_wr, ex_mem_rd, ex_mem_wr;
 logic ex_result_src;
 logic [DATA_WIDTH-1:0] ex_pc_plus_4, ex_alu_result, ex_data2;
@@ -134,8 +132,8 @@ execution ex_stage (
     .i_id_reg_destination(id_reg_destination),
     .i_id_funct3(id_funct3),
     .i_id_funct7(id_funct7),
-    .o_ex_flush(ex_flush),
-    .o_ex_jump_addr(ex_jump_addr),
+    .o_ex_flush(flush),
+    .o_ex_jump_addr(jump_addr),
     .o_ex_mem_to_reg(ex_mem_to_reg),
     .o_ex_reg_wr(ex_reg_wr),
     .o_ex_mem_rd(ex_mem_rd),

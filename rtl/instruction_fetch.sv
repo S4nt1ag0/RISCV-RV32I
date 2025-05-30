@@ -1,3 +1,5 @@
+import riscv_definitions::*; // Import package with types and constants
+
 /**
  * Module: instruction_fetch
  * Description:
@@ -21,36 +23,54 @@
     output logic [31:0] o_if_inst,        // Output instruction to Decode stage
     output logic [31:0] o_if_pc           // Output PC to Decode stage
 );
+logic [DATA_WIDTH-1:0] pc;
+logic [DATA_WIDTH-1:0] pc_mux_data;
+logic [DATA_WIDTH-1:0] pc_adder_data;
 
-logic [31:0] pc_next;  // Next PC (calculated combinationally)
-
-// Always enable instruction memory read
+assign o_inst_addr = pc;
 assign o_inst_rd_enable = 1'b1;
+ 
 
-// Address to fetch instruction from is the current PC
-assign o_inst_addr = pc_next;
+// -------------------------------------------------------------
+// Program Counter adder
+// -------------------------------------------------------------
+always_comb begin
+  pc_adder_data = pc + 32'd4;
+end
 
-// Sequential logic to update PC and outputs
+// -------------------------------------------------------------
+// Multiplex to select new PC value
+// -------------------------------------------------------------
+always_comb begin
+  case(i_flush)
+    0 : pc_mux_data = pc_adder_data;
+    1 : pc_mux_data = i_jump_addr;
+  endcase
+end
+ 
+// -------------------------------------------------------------
+// Program Counter regireg [FUNCTION_WIDTH-1:0] inst_function,ster
+// -------------------------------------------------------------
 always_ff @(posedge clk or negedge rst_n) begin
     if (!rst_n) begin
-        o_if_inst <= 32'd0;
-        o_if_pc   <= 32'd0;
+        pc   <= 32'd0;
     end else if (clk_en) begin
-        o_if_inst <= i_inst_data;   // Capture fetched instruction
-        o_if_pc   <= pc_next;            // Capture current PC (before update)
+        pc   <= pc_mux_data;                 // Capture current PC (before update)
     end
 end
 
-always_ff @(posedge clk or negedge rst_n) begin: proc_next_pc
-    if(!rst_n) begin
-        pc_next <= 'b0;
-    end else if(clk_en) begin
-        if (i_flush) begin
-            pc_next <= i_jump_addr;
-        end else begin
-            pc_next <= pc_next + 32'd4;
-        end
+// -------------------------------------------------------------
+// IF_ID_REG
+// -------------------------------------------------------------
+always_ff @(posedge clk or negedge rst_n) begin
+    if (!rst_n || i_flush) begin
+        o_if_inst <= 32'd0;
+        o_if_pc   <= 32'd0;
+    end else if (clk_en) begin
+        o_if_inst <= i_inst_data;            // Capture fetched instruction
+        o_if_pc   <= pc;                     // Capture current PC (before update)
     end
-end: proc_next_pc
+
+end
 
 endmodule
