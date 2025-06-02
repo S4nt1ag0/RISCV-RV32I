@@ -82,6 +82,7 @@ instruction_decode id_stage (
     .i_if_inst(if_inst),
     .i_if_pc(if_pc),
     .i_flush(flush),
+    .i_insert_nop(!id_clk_en),
     .i_ma_reg_destination(ma_reg_destination),
     .i_ma_reg_wr(ma_reg_wr),
     .i_wb_data(wb_data),
