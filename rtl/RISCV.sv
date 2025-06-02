@@ -22,7 +22,7 @@ module RISCV (
     // Instruction memory interface
     input  logic         i_instr_ready,       // Instruction memory ready
     input  dataBus_t     i_instr_data,        // Instruction memory data
-    output logic         o_inst_rd_en,        // Enable instruction memory read
+    output logic [3:0]   o_inst_rd_en,        // Enable instruction memory read
     output logic [31:0]  o_inst_addr,         // PC address to fetch instruction
 
     // Data memory interface
@@ -201,6 +201,7 @@ WriteBack wb_stage (
 
 // ==== Hazard Control ====
 hazard_control hc (
+    .clk(clk),
     .i_instr_ready(i_instr_ready),
     .i_data_ready(i_data_ready),
     .i_if_reg_src1(if_inst[19:15]),     // rs1 from instruction

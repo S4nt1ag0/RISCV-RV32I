@@ -19,7 +19,7 @@ import riscv_definitions::*; // Import package with types and constants
     input  logic [31:0] i_jump_addr,      // New PC address in case of flush
     input  logic [31:0] i_inst_data,      // Instruction data from memory
 
-    output logic        o_inst_rd_enable, // Enable signal to read instruction memory
+    output logic [3:0]  o_inst_rd_enable, // Enable signal to read instruction memory
     output logic [31:0] o_inst_addr,      // PC value used for instruction fetch
     output logic [31:0] o_if_inst,        // Output instruction to Decode stage
     output logic [31:0] o_if_pc           // Output PC to Decode stage
@@ -31,7 +31,7 @@ logic [DATA_WIDTH-1:0] pc_adder_data;
 logic mem_valid;
 
 assign o_inst_addr = pc;
-assign o_inst_rd_enable = 1'b1;
+assign o_inst_rd_enable = clk_en_if_pc ? 4'b1111 : 4'b0000;
  
 
 // -------------------------------------------------------------
