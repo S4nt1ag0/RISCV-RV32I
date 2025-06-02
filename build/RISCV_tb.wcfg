@@ -11,13 +11,13 @@
       </db_ref>
    </db_ref_list>
    <zoom_setting>
-      <ZoomStartTime time="78.834 ns"></ZoomStartTime>
-      <ZoomEndTime time="1,645.835 ns"></ZoomEndTime>
-      <Cursor1Time time="340.000 ns"></Cursor1Time>
+      <ZoomStartTime time="292.800 ns"></ZoomStartTime>
+      <ZoomEndTime time="451.501 ns"></ZoomEndTime>
+      <Cursor1Time time="405.000 ns"></Cursor1Time>
    </zoom_setting>
    <column_width_setting>
       <NameColumnWidth column_width="180"></NameColumnWidth>
-      <ValueColumnWidth column_width="103"></ValueColumnWidth>
+      <ValueColumnWidth column_width="83"></ValueColumnWidth>
    </column_width_setting>
    <WVObjectSize size="22" />
    <wvobject type="logic" fp_name="/RISCV_tb/clk">
@@ -1279,6 +1279,7 @@
          <wvobject type="array" fp_name="/RISCV_tb/dut/ex_stage/i_id_reg_destination">
             <obj_property name="ElementShortName">i_id_reg_destination[4:0]</obj_property>
             <obj_property name="ObjectShortName">i_id_reg_destination[4:0]</obj_property>
+            <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
          </wvobject>
          <wvobject type="array" fp_name="/RISCV_tb/dut/ex_stage/i_id_funct7">
             <obj_property name="ElementShortName">i_id_funct7[6:0]</obj_property>
@@ -1307,6 +1308,7 @@
          <wvobject type="array" fp_name="/RISCV_tb/dut/ex_stage/o_ex_reg_destination">
             <obj_property name="ElementShortName">o_ex_reg_destination[4:0]</obj_property>
             <obj_property name="ObjectShortName">o_ex_reg_destination[4:0]</obj_property>
+            <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
          </wvobject>
          <wvobject type="array" fp_name="/RISCV_tb/dut/ex_stage/o_ex_funct3">
             <obj_property name="ElementShortName">o_ex_funct3[2:0]</obj_property>
@@ -1397,6 +1399,7 @@
          <wvobject type="group" fp_name="group437">
             <obj_property name="label">alu</obj_property>
             <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="isExpanded"></obj_property>
             <wvobject type="array" fp_name="/RISCV_tb/dut/ex_stage/alu_instance/Operation">
                <obj_property name="ElementShortName">Operation[3:0]</obj_property>
                <obj_property name="ObjectShortName">Operation[3:0]</obj_property>
@@ -1404,14 +1407,17 @@
             <wvobject type="array" fp_name="/RISCV_tb/dut/ex_stage/alu_instance/SrcA">
                <obj_property name="ElementShortName">SrcA[31:0]</obj_property>
                <obj_property name="ObjectShortName">SrcA[31:0]</obj_property>
+               <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
             </wvobject>
             <wvobject type="array" fp_name="/RISCV_tb/dut/ex_stage/alu_instance/SrcB">
                <obj_property name="ElementShortName">SrcB[31:0]</obj_property>
                <obj_property name="ObjectShortName">SrcB[31:0]</obj_property>
+               <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
             </wvobject>
             <wvobject type="array" fp_name="/RISCV_tb/dut/ex_stage/alu_instance/ALUResult">
                <obj_property name="ElementShortName">ALUResult[31:0]</obj_property>
                <obj_property name="ObjectShortName">ALUResult[31:0]</obj_property>
+               <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
             </wvobject>
          </wvobject>
          <wvobject type="group" fp_name="group438">
@@ -1657,33 +1663,47 @@
             <obj_property name="ElementShortName">i_data_ready</obj_property>
             <obj_property name="ObjectShortName">i_data_ready</obj_property>
          </wvobject>
-         <wvobject type="array" fp_name="/RISCV_tb/dut/hc/i_id_reg_src1">
-            <obj_property name="ElementShortName">i_id_reg_src1[4:0]</obj_property>
-            <obj_property name="ObjectShortName">i_id_reg_src1[4:0]</obj_property>
-            <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+         <wvobject type="array" fp_name="/RISCV_tb/dut/if_stage/o_if_inst">
+            <obj_property name="ElementShortName">o_if_inst[31:0]</obj_property>
+            <obj_property name="ObjectShortName">o_if_inst[31:0]</obj_property>
+            <obj_property name="Radix">HEXRADIX</obj_property>
          </wvobject>
-         <wvobject type="array" fp_name="/RISCV_tb/dut/hc/i_id_reg_src2">
-            <obj_property name="ElementShortName">i_id_reg_src2[4:0]</obj_property>
-            <obj_property name="ObjectShortName">i_id_reg_src2[4:0]</obj_property>
-            <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+         <wvobject type="array" fp_name="/RISCV_tb/dut/hc/i_if_reg_src1">
+            <obj_property name="ElementShortName">i_if_reg_src1[4:0]</obj_property>
+            <obj_property name="ObjectShortName">i_if_reg_src1[4:0]</obj_property>
+            <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+         </wvobject>
+         <wvobject type="array" fp_name="/RISCV_tb/dut/hc/i_if_reg_src2">
+            <obj_property name="ElementShortName">i_if_reg_src2[4:0]</obj_property>
+            <obj_property name="ObjectShortName">i_if_reg_src2[4:0]</obj_property>
+            <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
          </wvobject>
          <wvobject type="array" fp_name="/RISCV_tb/dut/hc/i_ex_reg_dest">
             <obj_property name="ElementShortName">i_ex_reg_dest[4:0]</obj_property>
             <obj_property name="ObjectShortName">i_ex_reg_dest[4:0]</obj_property>
             <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
          </wvobject>
-         <wvobject type="array" fp_name="/RISCV_tb/dut/hc/i_ma_reg_dest">
-            <obj_property name="ElementShortName">i_ma_reg_dest[4:0]</obj_property>
-            <obj_property name="ObjectShortName">i_ma_reg_dest[4:0]</obj_property>
-            <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+         <wvobject type="array" fp_name="/RISCV_tb/dut/hc/i_id_reg_dest">
+            <obj_property name="ElementShortName">i_id_reg_dest[4:0]</obj_property>
+            <obj_property name="ObjectShortName">i_id_reg_dest[4:0]</obj_property>
+            <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+         </wvobject>
+         <wvobject type="logic" fp_name="/RISCV_tb/dut/hc/i_id_reg_wr">
+            <obj_property name="ElementShortName">i_id_reg_wr</obj_property>
+            <obj_property name="ObjectShortName">i_id_reg_wr</obj_property>
+         </wvobject>
+         <wvobject type="array" fp_name="/RISCV_tb/dut/hc/i_ex_reg_dest">
+            <obj_property name="ElementShortName">i_ex_reg_dest[4:0]</obj_property>
+            <obj_property name="ObjectShortName">i_ex_reg_dest[4:0]</obj_property>
+            <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+         </wvobject>
+         <wvobject type="logic" fp_name="/RISCV_tb/dut/hc/i_ex_reg_wr">
+            <obj_property name="ElementShortName">i_ex_reg_wr</obj_property>
+            <obj_property name="ObjectShortName">i_ex_reg_wr</obj_property>
          </wvobject>
          <wvobject type="logic" fp_name="/RISCV_tb/dut/hc/o_if_clk_en">
             <obj_property name="ElementShortName">o_if_clk_en</obj_property>
             <obj_property name="ObjectShortName">o_if_clk_en</obj_property>
-         </wvobject>
-         <wvobject type="logic" fp_name="/RISCV_tb/dut/hc/i_id_branch">
-            <obj_property name="ElementShortName">i_id_branch</obj_property>
-            <obj_property name="ObjectShortName">i_id_branch</obj_property>
          </wvobject>
          <wvobject type="logic" fp_name="/RISCV_tb/dut/hc/o_id_clk_en">
             <obj_property name="ElementShortName">o_id_clk_en</obj_property>
@@ -1696,6 +1716,10 @@
          <wvobject type="logic" fp_name="/RISCV_tb/dut/hc/o_ex_clk_en">
             <obj_property name="ElementShortName">o_ex_clk_en</obj_property>
             <obj_property name="ObjectShortName">o_ex_clk_en</obj_property>
+         </wvobject>
+         <wvobject type="logic" fp_name="/RISCV_tb/dut/hc/i_id_branch">
+            <obj_property name="ElementShortName">i_id_branch</obj_property>
+            <obj_property name="ObjectShortName">i_id_branch</obj_property>
          </wvobject>
          <wvobject type="logic" fp_name="/RISCV_tb/dut/hc/data_hazard">
             <obj_property name="ElementShortName">data_hazard</obj_property>

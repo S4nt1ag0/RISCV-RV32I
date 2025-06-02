@@ -1,11 +1,18 @@
 module hazard_control (
+    input logic clk,
+    input logic rst,
+
     // Pipeline stage status inputs
     input  logic        i_instr_ready,     // Instruction memory ready
     input  logic        i_data_ready,      // Data memory ready (for LOAD)
 
     // Source registers from ID stage
-    input  logic [4:0]  i_id_reg_src1,     // rs1
-    input  logic [4:0]  i_id_reg_src2,     // rs2
+    input  logic [4:0]  i_if_reg_src1,     // rs1
+    input  logic [4:0]  i_if_reg_src2,     // rs2
+
+    // Destination register and write enable from ID stage
+    input  logic [4:0]  i_id_reg_dest,
+    input  logic        i_id_reg_wr,
 
     // Destination register and write enable from EX stage
     input  logic [4:0]  i_ex_reg_dest,
@@ -34,13 +41,17 @@ module hazard_control (
     // Data Hazard (RAW) detection
     // -----------------------------
     assign data_hazard = (
-        (i_id_reg_src1 != 5'd0) &&
-        ((i_id_reg_src1 == i_ex_reg_dest && i_ex_reg_wr) ||
-         (i_id_reg_src1 == i_ma_reg_dest && i_ma_reg_wr))
+        (i_if_reg_src1 != 5'd0) &&
+        ((i_if_reg_src1 == i_id_reg_dest && i_id_reg_wr) ||
+         (i_if_reg_src1 == i_ex_reg_dest && i_ex_reg_wr) ||
+         (i_if_reg_src1 == i_ma_reg_dest && i_ma_reg_wr)
+         )
     ) || (
-        (i_id_reg_src2 != 5'd0) &&
-        ((i_id_reg_src2 == i_ex_reg_dest && i_ex_reg_wr) ||
-         (i_id_reg_src2 == i_ma_reg_dest && i_ma_reg_wr))
+        (i_if_reg_src2 != 5'd0) &&
+        ((i_if_reg_src2 == i_id_reg_dest && i_id_reg_wr) ||
+         (i_if_reg_src2 == i_ex_reg_dest && i_ex_reg_wr) ||
+         (i_if_reg_src2 == i_ma_reg_dest && i_ma_reg_wr)
+        )
     );
 
     // -----------------------------

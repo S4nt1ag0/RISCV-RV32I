@@ -77,7 +77,7 @@ logic [DATA_WIDTH-1:0] wb_data;
 
 instruction_decode id_stage (
     .clk(clk),
-    .clk_en(id_clk_en),
+    .clk_en(ex_clk_en),
     .rst_n(rst_n),
     .i_if_inst(if_inst),
     .i_if_pc(if_pc),
@@ -114,7 +114,7 @@ logic [6:0] ex_funct7;
 
 execution ex_stage (
     .clk(clk),
-    .clk_en(ex_clk_en),
+    .clk_en(ma_clk_en),
     .rst_n(rst_n),
     .i_id_mem_to_reg(id_mem_to_reg),
     .i_id_alu_src1(id_alu_src1),
@@ -203,10 +203,12 @@ WriteBack wb_stage (
 hazard_control hc (
     .i_instr_ready(i_instr_ready),
     .i_data_ready(i_data_ready),
-    .i_id_reg_src1(if_inst[19:15]),     // rs1 from instruction
-    .i_id_reg_src2(if_inst[24:20]),     // rs2 from instruction
+    .i_if_reg_src1(if_inst[19:15]),     // rs1 from instruction
+    .i_if_reg_src2(if_inst[24:20]),     // rs2 from instruction
+    .i_id_reg_dest(id_reg_destination),
+    .i_id_reg_wr(id_reg_wr),
     .i_ex_reg_dest(ex_reg_destination),
-    .i_ex_reg_wr(ex_mem_wr),
+    .i_ex_reg_wr(ex_reg_wr),
     .i_ma_reg_dest(ma_reg_destination),
     .i_ma_reg_wr(ma_reg_wr),
     .i_id_branch(id_branch),
