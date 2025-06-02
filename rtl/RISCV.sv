@@ -47,7 +47,8 @@ logic [31:0] if_pc;
 instruction_fetch if_stage (
     .clk(clk),
     .rst_n(rst_n),
-    .clk_en(if_clk_en),
+    .clk_en_if_pc(if_clk_en),
+    .clk_en_if_reg(id_clk_en),
     .i_flush(flush),
     .i_jump_addr(jump_addr),
     .i_inst_data(i_instr_data),
