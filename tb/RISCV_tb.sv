@@ -141,7 +141,7 @@ module RISCV_tb;
 
     forever @(negedge clk) begin
       if (data_wr_en_ma) begin
-        if ((data_addr === 100) && (data_rd === 25)) begin
+        if ((data_addr === 100) && (data_wr === 25)) begin
           $display("\n=== Simulation Succeeded ===\n");
           $finish;;
         end else if (data_addr !== 96) begin

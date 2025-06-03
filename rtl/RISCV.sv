@@ -213,7 +213,7 @@ hazard_control hc (
     .i_ex_reg_wr(ex_reg_wr),
     .i_ma_reg_dest(ma_reg_destination),
     .i_ma_reg_wr(ma_reg_wr),
-    .i_id_branch(id_branch),
+    .i_id_branch(id_branch || id_jump),
     .o_if_clk_en(if_clk_en),
     .o_id_clk_en(id_clk_en),
     .o_ex_clk_en(ex_clk_en),

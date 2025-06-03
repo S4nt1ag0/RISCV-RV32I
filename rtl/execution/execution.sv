@@ -90,6 +90,9 @@ module execution (
         .flush(flush)
     );
 
+    assign o_ex_flush = flush;
+    assign o_ex_jump_addr = jump_addr;
+
     // Pipeline register (EX stage outputs)
     always_ff @(posedge clk or negedge rst_n) begin : proc_id_ex
         if (!rst_n) begin
@@ -101,8 +104,6 @@ module execution (
             o_ex_reg_destination <= '0;
             o_ex_funct3          <= '0;
             o_ex_funct7          <= '0;
-            o_ex_flush           <= '0;
-            o_ex_jump_addr       <= '0;
             o_ex_pc_plus_4       <= '0;
             o_ex_alu_result      <= '0;
             o_ex_data2           <= '0;
@@ -115,11 +116,9 @@ module execution (
             o_ex_reg_destination <= i_id_reg_destination;
             o_ex_funct3          <= i_id_funct3;
             o_ex_funct7          <= i_id_funct7;
-            o_ex_flush           <= flush;
-            o_ex_jump_addr       <= jump_addr;
             o_ex_pc_plus_4       <= pc_plus_4;
             o_ex_alu_result      <= alu_result;
-            o_ex_data2           <= SrcB;
+            o_ex_data2           <= i_id_reg_read_data2;
         end
     end : proc_id_ex
 

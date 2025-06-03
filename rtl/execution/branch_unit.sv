@@ -29,8 +29,6 @@ module branch_unit (
     output dataBus_t jump_addr,
     output logic     flush
 );
-
-    logic        branch_taken;
     dataBus_t    PC_imm;
     logic        branch_sel;
 
@@ -44,7 +42,7 @@ module branch_unit (
     assign branch_sel = branch && aluResult[0]; // ALUResult[0] = true/false from comparison
 
     // Compute next PC (jump or branch target)
-    assign jump_addr  = branch_sel ? PC_imm : aluResult;
+    assign jump_addr  = (branch_sel || jump) ? PC_imm : aluResult;
 
     // Flush pipeline if jump or branch is taken
     assign flush      = jump || branch_sel;
