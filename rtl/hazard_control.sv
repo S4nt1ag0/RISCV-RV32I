@@ -1,6 +1,5 @@
 module hazard_control (
     input logic clk,
-    input logic rst,
 
     // Pipeline stage status inputs
     input  logic        i_instr_ready,     // Instruction memory ready
@@ -36,6 +35,7 @@ module hazard_control (
     logic data_hazard;
     logic structural_hazard;
     logic control_hazard;
+    logic stall;
 
     // -----------------------------
     // Data Hazard (RAW) detection
@@ -68,7 +68,7 @@ module hazard_control (
     // Clock Enable Logic
     // -----------------------------
     always_comb begin
-        logic stall = data_hazard || structural_hazard || control_hazard;
+        stall = data_hazard || structural_hazard || control_hazard;
 
         o_if_clk_en = !stall;
         o_id_clk_en = !stall;
