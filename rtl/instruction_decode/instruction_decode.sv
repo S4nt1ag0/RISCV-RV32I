@@ -7,6 +7,7 @@ module instruction_decode (
     input  logic [DATA_WIDTH-1:0] i_if_inst,                // Instruction from IF stage
     input  dataBus_t              i_if_pc,                  // Program Counter value from IF stage
     input  logic                  i_flush,                  // Flush signal
+    input  logic                  i_insert_nop,             // Insert Nop
 
     input  logic [REG_ADDR-1:0]   i_ma_reg_destination,     // Forwarded register destination data from MA stage
     input  logic                  i_ma_reg_wr,              // Write enable signal from MA stage
@@ -40,12 +41,16 @@ module instruction_decode (
  logic [2:0]  funct3;
  logic [6:0]  funct7;
 
-assign  opcode         = opcodeType'(i_if_inst[6:0]);
-assign read_reg1_addr = i_if_inst[19:15];
-assign read_reg2_addr = i_if_inst[24:20];
-assign write_reg_addr = i_if_inst[11:7];
-assign funct3         = i_if_inst[14:12];
-assign funct7         = i_if_inst[31:25];
+ logic [31:0] id_instruction;
+
+assign id_instruction = (i_insert_nop) ? 32'd0 : i_if_inst;
+
+assign  opcode         = opcodeType'(id_instruction[6:0]);
+assign read_reg1_addr = id_instruction[19:15];
+assign read_reg2_addr = id_instruction[24:20];
+assign write_reg_addr = id_instruction[11:7];
+assign funct3         = id_instruction[14:12];
+assign funct7         = id_instruction[31:25];
 
 // Internal wires for controller outputs
 aluOpType    alu_op;
@@ -84,7 +89,6 @@ controller id_controller (
 // Register File
 register_file id_reg_file (
     .i_clk(clk),
-    .i_clk_en(clk_en),
     .i_rst_n(rst_n),
     .i_read_register1_addr(read_reg1_addr),
     .i_read_register2_addr(read_reg2_addr),

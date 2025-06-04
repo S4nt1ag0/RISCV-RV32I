@@ -51,6 +51,10 @@ module memory
     // Output ready signal (always high in this version)
     assign dout_ready = 1'b1;
 
+     // Normalize address to word-aligned index
+    logic [DATA_WIDTH-3:0] word_addr;  // Drop 2 LSBs to align to word
+    assign word_addr = addr[DATA_WIDTH-1:2];
+
     // Generate 4 memory banks (8-bit each)
     genvar i;
     generate
@@ -58,12 +62,12 @@ module memory
             rams_sp_wf #(
                 .RAM_SIZE(8),
                 .RAM_WIDE(8),
-                .ADDR_WIDTH(DATA_WIDTH)
+                .ADDR_WIDTH(DATA_WIDTH-2)
             ) u_ram (
                 .clk(clk),
                 .we(we),
                 .en(ctrl[i]),
-                .addr(addr),
+                .addr(word_addr),
                 .di(inS[i]),
                 .dout(outS[i])
             );

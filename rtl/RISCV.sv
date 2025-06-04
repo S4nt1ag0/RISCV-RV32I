@@ -22,7 +22,7 @@ module RISCV (
     // Instruction memory interface
     input  logic         i_instr_ready,       // Instruction memory ready
     input  dataBus_t     i_instr_data,        // Instruction memory data
-    output logic         o_inst_rd_en,        // Enable instruction memory read
+    output logic [3:0]   o_inst_rd_en,        // Enable instruction memory read
     output logic [31:0]  o_inst_addr,         // PC address to fetch instruction
 
     // Data memory interface
@@ -47,14 +47,15 @@ logic [31:0] if_pc;
 instruction_fetch if_stage (
     .clk(clk),
     .rst_n(rst_n),
-    .clk_en(if_clk_en),
-    .flush(flush),
-    .jump_addr(jump_addr),
-    .inst_data(i_instr_data),
-    .inst_rd_enable(o_inst_rd_en),
-    .inst_addr(o_inst_addr),
-    .if_inst(if_inst),
-    .if_pc(if_pc)
+    .clk_en_if_pc(if_clk_en),
+    .clk_en_if_reg(id_clk_en),
+    .i_flush(flush),
+    .i_jump_addr(jump_addr),
+    .i_inst_data(i_instr_data),
+    .o_inst_rd_enable(o_inst_rd_en),
+    .o_inst_addr(o_inst_addr),
+    .o_if_inst(if_inst),
+    .o_if_pc(if_pc)
 );
 
 // ==== Instruction Decode Stage ====
@@ -76,11 +77,12 @@ logic [DATA_WIDTH-1:0] wb_data;
 
 instruction_decode id_stage (
     .clk(clk),
-    .clk_en(id_clk_en),
+    .clk_en(ex_clk_en),
     .rst_n(rst_n),
     .i_if_inst(if_inst),
     .i_if_pc(if_pc),
     .i_flush(flush),
+    .i_insert_nop(!id_clk_en),
     .i_ma_reg_destination(ma_reg_destination),
     .i_ma_reg_wr(ma_reg_wr),
     .i_wb_data(wb_data),
@@ -104,8 +106,6 @@ instruction_decode id_stage (
 );
 
 // ==== Execute Stage ====
-logic ex_flush;
-logic [DATA_WIDTH-1:0] ex_jump_addr;
 logic ex_mem_to_reg, ex_reg_wr, ex_mem_rd, ex_mem_wr;
 logic ex_result_src;
 logic [DATA_WIDTH-1:0] ex_pc_plus_4, ex_alu_result, ex_data2;
@@ -115,7 +115,7 @@ logic [6:0] ex_funct7;
 
 execution ex_stage (
     .clk(clk),
-    .clk_en(ex_clk_en),
+    .clk_en(ma_clk_en),
     .rst_n(rst_n),
     .i_id_mem_to_reg(id_mem_to_reg),
     .i_id_alu_src1(id_alu_src1),
@@ -134,8 +134,8 @@ execution ex_stage (
     .i_id_reg_destination(id_reg_destination),
     .i_id_funct3(id_funct3),
     .i_id_funct7(id_funct7),
-    .o_ex_flush(ex_flush),
-    .o_ex_jump_addr(ex_jump_addr),
+    .o_ex_flush(flush),
+    .o_ex_jump_addr(jump_addr),
     .o_ex_mem_to_reg(ex_mem_to_reg),
     .o_ex_reg_wr(ex_reg_wr),
     .o_ex_mem_rd(ex_mem_rd),
@@ -202,13 +202,18 @@ WriteBack wb_stage (
 
 // ==== Hazard Control ====
 hazard_control hc (
+    .clk(clk),
     .i_instr_ready(i_instr_ready),
     .i_data_ready(i_data_ready),
-    .i_id_reg_src1(if_inst[19:15]),     // rs1 from instruction
-    .i_id_reg_src2(if_inst[24:20]),     // rs2 from instruction
+    .i_if_reg_src1(if_inst[19:15]),     // rs1 from instruction
+    .i_if_reg_src2(if_inst[24:20]),     // rs2 from instruction
+    .i_id_reg_dest(id_reg_destination),
+    .i_id_reg_wr(id_reg_wr),
     .i_ex_reg_dest(ex_reg_destination),
+    .i_ex_reg_wr(ex_reg_wr),
     .i_ma_reg_dest(ma_reg_destination),
-    .i_id_branch(id_branch),
+    .i_ma_reg_wr(ma_reg_wr),
+    .i_id_branch(id_branch || id_jump),
     .o_if_clk_en(if_clk_en),
     .o_id_clk_en(id_clk_en),
     .o_ex_clk_en(ex_clk_en),

@@ -25,6 +25,7 @@ module RISCV_tb;
 
   // Outputs from DUT
   logic inst_rd_en;
+  logic [3:0] inst_ctrl_cpu;
   logic [31:0] inst_addr;
   dataBus_t data_wr;
   dataBus_t data_addr;
@@ -40,7 +41,7 @@ module RISCV_tb;
       .clk(clk),
       .we(inst_wr_en),
       .rd(inst_rd_en),
-      .ctrl(inst_ctrl),
+      .ctrl(init_active ? inst_ctrl : inst_ctrl_cpu),
       .addr(init_active ? init_addr : inst_addr),
       .di(inst_wr),
       .dout(instr_data),
@@ -68,7 +69,7 @@ module RISCV_tb;
     .rst_n(rst_n),
     .i_instr_ready(instr_ready),
     .i_instr_data(instr_data),
-    .o_inst_rd_en(inst_rd_en),
+    .o_inst_rd_en(inst_ctrl_cpu),
     .o_inst_addr(inst_addr),
     .i_data_ready(data_ready),
     .i_data_rd(data_rd),
@@ -121,12 +122,13 @@ module RISCV_tb;
       inst_wr     = mem_array[i];
       inst_wr_en  = 1;
       inst_ctrl   = 4'b1111;
-      init_addr   = i; 
+      init_addr   = (4*i); 
     end
 
     @(posedge clk);
     inst_wr_en = 0;
     init_active = 0;
+    inst_rd_en = 1'b1;
     $display("Instruction memory initialized.");
 
     repeat (2) @(negedge clk);
@@ -139,12 +141,12 @@ module RISCV_tb;
 
     forever @(negedge clk) begin
       if (data_wr_en_ma) begin
-        if ((data_addr === 100) && (data_rd === 25)) begin
+        if ((data_addr === 100) && (data_wr === 25)) begin
           $display("\n=== Simulation Succeeded ===\n");
-          $stop;
+          $finish;;
         end else if (data_addr !== 96) begin
           $display("\n!!! Simulation Failed !!!\n");
-          $stop;
+          $finish;;
         end
       end
     end

@@ -9,7 +9,6 @@ import riscv_definitions::*; // Import RISC-V parameter definitions
  */
 module register_file (
     input  logic                  i_clk,                   // Clock signal
-    input  logic                  i_clk_en,                // Clock enable
     input  logic                  i_rst_n,                 // Asynchronous reset (active low)
     input  logic [REG_ADDR-1:0]   i_read_register1_addr,   // Source register 1 address
     input  logic [REG_ADDR-1:0]   i_read_register2_addr,   // Source register 2 address
@@ -45,7 +44,7 @@ module register_file (
     always_ff @(posedge i_clk or negedge i_rst_n) begin : reg_write
         if (!i_rst_n) begin
             regs <= '{default: '0};
-        end else if (i_clk_en && i_wr_reg_en && i_write_register_addr != '0) begin
+        end else if (i_wr_reg_en && i_write_register_addr != '0) begin
             regs[i_write_register_addr] <= i_write_data;
         end
     end : reg_write

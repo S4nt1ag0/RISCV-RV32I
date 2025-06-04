@@ -124,8 +124,6 @@ always_comb begin : proc_decode
             o_imm_src     = IMM_I;
             if(i_funct3 == 3'b001 || i_funct3 == 3'b101 )
                 o_imm_src     = IMM_IS;
-            if (i_funct3 == 3'b000 && i_funct7[5])
-                o_alu_control = ALU_SUB;
             else if (i_funct3 == 3'b101 && i_funct7[5])
                 o_alu_control = ALU_SRA;
             else

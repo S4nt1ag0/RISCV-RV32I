@@ -1,2 +1,3 @@
+rtl/riscv_definitions.sv
 rtl/instruction_fetch.sv
 tb/instruction_fetch_tb.sv
