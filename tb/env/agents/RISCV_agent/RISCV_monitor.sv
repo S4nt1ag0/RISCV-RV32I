@@ -12,72 +12,57 @@
 
 class RISCV_monitor extends uvm_monitor;
  
-  /*
-   * Declaration of Virtual interface
-   */
   virtual RISCV_interface vif;
-
-  /*
-   * Declaration of Analysis ports and exports 
-   */
   uvm_analysis_port #(RISCV_transaction) mon2sb_port;
 
-  /*
-   * Declaration of transaction item 
-   */
-  RISCV_transaction act_trans;
-
-  /*
-   * Declaration of component utils 
-   */
   `uvm_component_utils(RISCV_monitor)
 
-  /*
-   * Constructor
-   */
   function new (string name, uvm_component parent);
     super.new(name, parent);
-    act_trans = new();
     mon2sb_port = new("mon2sb_port", this);
   endfunction : new
 
-  /*
-   * Build phase: construct the components
-   * This phase retrieves the virtual interface from the UVM configuration database.
-   */
   function void build_phase(uvm_phase phase);
     super.build_phase(phase);
-    if(!uvm_config_db#(virtual RISCV_interface)::get(this, "", "intf", vif))
-      `uvm_fatal("NOVIF",{"virtual interface must be set for: ",get_full_name(),".vif"});
-  endfunction: build_phase
+    if (!uvm_config_db#(virtual RISCV_interface)::get(this, "", "intf", vif))
+      `uvm_fatal("NOVIF", {"Virtual interface must be set for: ", get_full_name(), ".vif"});
+  endfunction : build_phase
 
-  /*
-   * Run phase: Extract the info from DUT via interface 
-   * This phase continuously samples the transaction signals from the DUT.
-   */
   virtual task run_phase(uvm_phase phase);
     forever begin
       collect_trans();
-      mon2sb_port.write(act_trans);
     end
   endtask : run_phase
 
-  /*
-   * Task: collect_actual_trans
-   * Samples the transaction signals from the DUT.
-   */
   task collect_trans();
-    wait(!vif.reset);
-    @(vif.rc_cb);
-    @(vif.rc_cb);
-    act_trans.x = vif.rc_cb.x;
-    act_trans.y = vif.rc_cb.y;
-    act_trans.cin = vif.rc_cb.cin;
-    act_trans.sum = vif.rc_cb.sum;
-    act_trans.cout = vif.rc_cb.cout;
-    `uvm_info(get_full_name(),$sformatf("TRANSACTION FROM MONITOR"),UVM_LOW);
-    act_trans.print();
-  endtask
+    RISCV_transaction act_trans;
+
+    wait(!vif.reset);  // Espera sair do reset
+    @(posedge vif.clk iff vif.instr_valid);  // Espera por uma instrução válida
+
+    act_trans = RISCV_transaction::type_id::create("act_trans", this);
+
+    // Inputs
+    act_trans.instr_ready   = vif.instr_ready;
+    act_trans.instr_data    = vif.instr_data;
+
+    act_trans.data_ready    = vif.data_ready;
+    act_trans.data_rd       = vif.data_rd;
+
+    // Outputs esperados
+    act_trans.inst_rd_en     = vif.inst_rd_en;
+    act_trans.inst_ctrl_cpu  = vif.inst_ctrl_cpu;
+    act_trans.inst_addr      = vif.inst_addr;
+    act_trans.data_wr        = vif.data_wr;
+    act_trans.data_addr      = vif.data_addr;
+    act_trans.data_rd_en_ctrl= vif.data_rd_en_ctrl;
+    act_trans.data_rd_en_ma  = vif.data_rd_en_ma;
+    act_trans.data_wr_en_ma  = vif.data_wr_en_ma;
+
+    `uvm_info(get_full_name(), $sformatf("Monitor captured transaction:\n%s", act_trans.sprint()), UVM_LOW);
+
+    mon2sb_port.write(act_trans);
+  endtask : collect_trans
 
 endclass : RISCV_monitor
 
