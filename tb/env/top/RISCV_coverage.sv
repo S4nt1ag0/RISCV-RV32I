@@ -7,66 +7,80 @@
 // Date  : June 2025
 //------------------------------------------------------------------------------
 
-//revistar isso aqui depois que o conceito dos testes estievrem mais fixados
 `ifndef RISCV_COVERAGE
 `define RISCV_COVERAGE
 
-class RISCV_coverage#(type T = adder_transaction) extends uvm_subscriber#(T);
+class RISCV_coverage extends uvm_subscriber#(RISCV_transaction);
 
   /*
-   * Declaration of Local fields
+   * Local copy of the transaction for coverage sampling
    */
-  adder_transaction cov_trans;
-  `uvm_component_utils(adder_coverage)
+  RISCV_transaction cov_trans;
+  `uvm_component_utils(RISCV_coverage)
 
   /*
-   * Functional coverage: covergroup for adder
-   * Defines coverpoints for various fields of the adder transaction.
+   * Covergroup for functional coverage of store instructions
    */
-  covergroup adder_cg;
+  covergroup riscv_store_cg;
     option.per_instance = 1;
-    option.goal = 100;
 
-    adder_x: coverpoint cov_trans.x {
-      bins x_values[] = {[0:$]};
-    }
-  
-    adder_y: coverpoint cov_trans.y {
-      bins y_values[] = {[0:$]};
+    // Coverpoint for opcode (bits [6:0] of instr_data)
+    cp_opcode: coverpoint cov_trans.instr_data[6:0] {
+      bins sb = {7'b0100011}; // opcode for STORE group
     }
 
-    adder_cin: coverpoint cov_trans.cin {
-      bins cin_1 = {1};
-      bins cin_0 = {0};
+    // Coverpoint for funct3 (bits [14:12] of instr_data)
+    cp_funct3: coverpoint cov_trans.instr_data[14:12] {
+      bins sb  = {3'b000}; // SB
+      bins sh  = {3'b001}; // SH
+      bins sw  = {3'b010}; // SW
     }
 
-    adder_sum: coverpoint cov_trans.sum {
-      bins sum_values[] = {[0:$]};
+    // Coverpoint for instr_ready signal
+    cp_instr_ready: coverpoint cov_trans.instr_ready {
+      bins ready  = {1};
+      bins not_ready = {0};
     }
 
-    adder_cout: coverpoint cov_trans.cout { 
-      bins low = {0};
-      bins high = {1};
+    // Coverpoint for instruction name (optional)
+    cp_instr_name: coverpoint cov_trans.instr_name {
+      bins sb = {"SB"};
+      bins sh = {"SH"};
+      bins sw = {"SW"};
     }
+
+    // Coverpoint for address being written to
+    cp_data_addr: coverpoint cov_trans.data_addr {
+      bins low  = {[32'h0000_0000 : 32'h0000_00FF]};
+      bins mid  = {[32'h0000_0100 : 32'h0000_0FFF]};
+      bins high = {[32'h0000_1000 : 32'hFFFF_FFFF]};
+    }
+
+    // Coverpoint for data being written
+    cp_data_wr: coverpoint cov_trans.data_wr {
+      bins zero = {32'd0};
+      bins all_ones = {32'hFFFF_FFFF};
+      bins small = {[1:255]};
+      bins large = {[256:$]};
+    }
+
   endgroup
 
   /*
-   * Constructor
-   * Initializes the coverage group and transaction object.
+   * Constructor: Initializes the coverage group and transaction object.
    */
-  function new(string name = "adder_ref_model", uvm_component parent);
+  function new(string name = "RISCV_coverage", uvm_component parent);
     super.new(name, parent);
-    adder_cg = new();
+    riscv_store_cg = new();
     cov_trans = new();
   endfunction
 
   /*
-   * Method: write (samples coverage)
-   * Samples the coverage for the given transaction.
+   * Coverage sampling callback
    */
-  function void write(T t);
+  function void write(RISCV_transaction t);
     this.cov_trans = t;
-    adder_cg.sample();
+    riscv_store_cg.sample();
   endfunction
 
 endclass

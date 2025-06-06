@@ -12,87 +12,69 @@
 
 class RISCV_driver extends uvm_driver #(RISCV_transaction);
  
-  /*
-   * Declaration of transaction item 
-   */
   RISCV_transaction trans;
-
-  /*
-   * Declaration of Virtual interface 
-   */
   virtual RISCV_interface vif;
 
-  /*
-   * Declaration of component utils to register with factory 
-   */
   `uvm_component_utils(RISCV_driver)
   uvm_analysis_port#(RISCV_transaction) drv2rm_port;
 
-  /*
-   * Constructor
-   */
   function new (string name, uvm_component parent);
     super.new(name, parent);
-  endfunction : new
+  endfunction
 
-  /*
-   * Build phase: construct the components 
-   * This phase retrieves the virtual interface from the UVM configuration database.
-   */
   function void build_phase(uvm_phase phase);
     super.build_phase(phase);
-    if(!uvm_config_db#(virtual RISCV_interface)::get(this, "", "intf", vif))
-      `uvm_fatal("NO_VIF",{"virtual interface must be set for: ",get_full_name(),".vif"});
+    if (!uvm_config_db#(virtual RISCV_interface)::get(this, "", "intf", vif))
+      `uvm_fatal("NO_VIF", {"Virtual interface must be set for: ", get_full_name(), ".vif"});
     drv2rm_port = new("drv2rm_port", this);
-  endfunction: build_phase
+  endfunction
 
-  /*
-   * Run phase: Drive the transaction info to DUT
-   * This phase continuously drives transactions to the DUT.
-   */
   virtual task run_phase(uvm_phase phase);
     reset();
     forever begin
       seq_item_port.get_next_item(req);
       drive();
-      `uvm_info(get_full_name(),$sformatf("TRANSACTION FROM DRIVER"),UVM_LOW);
+      `uvm_info(get_full_name(), $sformatf("Driving instruction: %s", req.instr_name), UVM_LOW);
       req.print();
-      @(vif.dr_cb);
-      $cast(rsp,req.clone());
+      @(vif.dr_cb); // Wait one clock for handshake
+      $cast(rsp, req.clone());
       rsp.set_id_info(req);
       drv2rm_port.write(rsp);
       seq_item_port.item_done();
       seq_item_port.put(rsp);
     end
-  endtask : run_phase
+  endtask
 
   /*
    * Task: drive
-   * Drives the transaction signals to the DUT.
+   * Drives instruction and memory request signals to the DUT.
+   * This version supports instruction fetch and store operations.
    */
   task drive();
     wait(!vif.reset);
     @(vif.dr_cb);
-    vif.dr_cb.x <= req.x;
-    vif.dr_cb.y <= req.y;
-    vif.dr_cb.cin <= req.cin;
+
+    // Drive instruction bus
+    vif.dr_cb.instr_ready <= req.instr_ready;
+    vif.dr_cb.instr_data  <= req.instr_data;
+
+    // Memory signals (optional for future enhancements)
+    vif.dr_cb.data_ready  <= req.data_ready;
+    vif.dr_cb.data_rd     <= req.data_rd;
   endtask
 
   /*
    * Task: reset
-   * Resets the transaction signals.
+   * Resets the DUT inputs.
    */
   task reset();
-    vif.dr_cb.x <= 0;
-    vif.dr_cb.y <= 0;
-    vif.dr_cb.cin <= 0;
+    @(vif.dr_cb);
+    vif.dr_cb.instr_ready <= 0;
+    vif.dr_cb.instr_data  <= 32'd0;
+    vif.dr_cb.data_ready  <= 0;
+    vif.dr_cb.data_rd     <= 32'd0;
   endtask
 
-endclass : RISCV_driver
+endclass
 
 `endif
-
-
-
-
-
