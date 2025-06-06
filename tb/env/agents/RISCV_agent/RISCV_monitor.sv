@@ -38,7 +38,6 @@ class RISCV_monitor extends uvm_monitor;
     RISCV_transaction act_trans;
 
     wait(!vif.reset);  // Espera sair do reset
-    @(posedge vif.clk iff vif.instr_valid);  // Espera por uma instrução válida
 
     act_trans = RISCV_transaction::type_id::create("act_trans", this);
 

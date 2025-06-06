@@ -78,7 +78,11 @@ class RISCV_ref_model extends uvm_component;
   bit [6:0] opcode;
   bit [2:0] funct3;
   bit [6:0] funct7;
+  bit [4:0] reg1_addr;
+  bit [4:0] reg2_addr;
+  bit [4:0] reg_dest;
   bit [31:0] rs1, rs2;
+  bit [31:0] imm;
   wb_info_t wb;
 
   exp_trans_local = RISCV_transaction::type_id::create("exp_trans_local");
@@ -86,31 +90,34 @@ class RISCV_ref_model extends uvm_component;
   opcode = input_trans.instr_data[6:0];
   funct3 = input_trans.instr_data[14:12];
   funct7 = input_trans.instr_data[31:25];
+  reg1_addr = input_trans.instr_data[19:15];
+  reg2_addr = input_trans.instr_data[24:20];
+  reg_dest = input_trans.instr_data[11:7];
+  imm = {{20{input_trans.instr_data[31]}}, input_trans.instr_data[31:20]};
 
-  rs1 = regfile[input_trans.rs1_id];
-  rs2 = regfile[input_trans.rs2_id];
-
+  rs1 = regfile[reg1_addr];
+  rs2 = regfile[reg2_addr];
+  
   wb = '{rd: 0, value: 0, we: 0};
 
   // ADD instruction (R-type)
   if (opcode == 7'b0110011 && funct3 == 3'b000 && funct7 == 7'b0000000) begin
-    exp_trans_local.alu_result = rs1 + rs2;
-    exp_trans_local.valid_op = "ADD";
-    wb = '{rd: input_trans.rd, value: exp_trans_local.alu_result, we: 1};
+    exp_trans_local.data_addr = rs1 + rs2;
+    wb = '{rd: reg_dest, value: exp_trans_local.data_addr, we: 1};
   end
   // LW instruction (I-type)
   else if (opcode == 7'b0000011 && funct3 == 3'b010) begin
-    exp_trans_local.mem_addr = rs1 + input_trans.imm_i;
-    exp_trans_local.data_rd  = input_trans.mem_data;
-    exp_trans_local.valid_op = "LW";
-    wb = '{rd: input_trans.rd, value: input_trans.mem_data, we: 1};
+    exp_trans_local.data_addr = rs1 + imm;
+    exp_trans_local.data_rd  = input_trans.data_rd;
+    exp_trans_local.data_rd_en_ctrl = 4'b1111;
+    wb = '{rd: reg_dest, value: input_trans.data_rd, we: 1};
   end
   // SW instruction (S-type)
   else if (opcode == 7'b0100011 && funct3 == 3'b010) begin
-    exp_trans_local.mem_addr = rs1 + input_trans.imm_s;
+    exp_trans_local.data_addr = rs1 + imm;
     exp_trans_local.data_wr  = rs2;
-    exp_trans_local.data_we  = 1;
-    exp_trans_local.valid_op = "SW";
+    exp_trans_local.data_wr_en_ma  = 1;
+    exp_trans_local.data_rd_en_ctrl = 4'b1111;
   end
   else begin
     `uvm_warning(get_full_name(), $sformatf("Unsupported instruction: 0x%h", input_trans.instr_data));
