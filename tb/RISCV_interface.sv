@@ -1,8 +1,8 @@
 `ifndef RISCV_INTERFACE
 `define RISCV_INTERFACE
 
-interface RISCV_interface(input logic clk,reset);
-  
+interface RISCV_interface(input logic clk, reset);
+
   ////////////////////////////////////////////////////////////////////////////
   // Declaration of Signals
   ////////////////////////////////////////////////////////////////////////////
@@ -28,40 +28,40 @@ interface RISCV_interface(input logic clk,reset);
   ////////////////////////////////////////////////////////////////////////////
   // clocking block and modport declaration for driver 
   ////////////////////////////////////////////////////////////////////////////
-  clocking dr_cb@(posedge clk) ;
-    output i_instr_ready;
-    output i_instr_data;
-    output i_data_ready;
-    output i_data_rd;
+  clocking dr_cb @(posedge clk);
+    output instr_ready;
+    output instr_data;
+    output data_ready;
+    output data_rd;
     input  inst_rd_en; 
     input  inst_addr; 
     input  data_wr;
     input  data_addr;
     input  data_rd_en_ctrl; 
-    input  data_rd_en_ma
+    input  data_rd_en_ma;
     input  data_wr_en_ma;
   endclocking
-  
-  modport drv (clocking dr_cb,input clk,reset) ;
+
+  modport drv (clocking dr_cb, input clk, reset);
 
   ////////////////////////////////////////////////////////////////////////////
   // clocking block and modport declaration for monitor 
   ////////////////////////////////////////////////////////////////////////////
-  clocking rc_cb@(negedge clk) ;
-    input i_instr_ready;
-    input i_instr_data;
-    input i_data_ready;
-    input i_data_rd;
-    input  inst_rd_en; 
-    input  inst_addr; 
-    input  data_wr;
-    input  data_addr;
-    input  data_rd_en_ctrl; 
-    input  data_rd_en_ma
-    input  data_wr_en_ma;
+  clocking rc_cb @(negedge clk);
+    input instr_ready;
+    input instr_data;
+    input data_ready;
+    input data_rd;
+    input inst_rd_en; 
+    input inst_addr; 
+    input data_wr;
+    input data_addr;
+    input data_rd_en_ctrl; 
+    input data_rd_en_ma;
+    input data_wr_en_ma;
   endclocking
-  
-  modport rcv (clocking rc_cb,input clk,reset);
+
+  modport rcv (clocking rc_cb, input clk, reset);
 
 endinterface
 

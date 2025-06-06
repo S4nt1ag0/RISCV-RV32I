@@ -73,55 +73,52 @@ class RISCV_ref_model extends uvm_component;
     end
   endtask
 
-  task process_instruction(RISCV_transaction input_trans);
-    exp_trans = input_trans.clone();
+  task automatic process_instruction(RISCV_transaction input_trans);
+  RISCV_transaction exp_trans_local;
+  bit [6:0] opcode;
+  bit [2:0] funct3;
+  bit [6:0] funct7;
+  bit [31:0] rs1, rs2;
+  wb_info_t wb;
 
-    // Instruction decoding
-    logic [6:0] opcode = input_trans.instr_data[6:0];
-    logic [2:0] funct3 = input_trans.instr_data[14:12];
-    logic [6:0] funct7 = input_trans.instr_data[31:25];
+  exp_trans_local = RISCV_transaction::type_id::create("exp_trans_local");
+  exp_trans_local.copy(input_trans);
+  opcode = input_trans.instr_data[6:0];
+  funct3 = input_trans.instr_data[14:12];
+  funct7 = input_trans.instr_data[31:25];
 
-    // Read source operands from shadow regfile
-    logic [31:0] rs1 = regfile[input_trans.rs1_id];
-    logic [31:0] rs2 = regfile[input_trans.rs2_id];
+  rs1 = regfile[input_trans.rs1_id];
+  rs2 = regfile[input_trans.rs2_id];
 
-    // Default: no writeback
-    wb_info_t wb = '{rd: 0, value: 0, we: 0};
+  wb = '{rd: 0, value: 0, we: 0};
 
-    // ADD instruction (R-type)
-    if (opcode == 7'b0110011 && funct3 == 3'b000 && funct7 == 7'b0000000) begin
-      exp_trans.alu_result = rs1 + rs2;
-      exp_trans.valid_op = "ADD";
-      wb = '{rd: input_trans.rd, value: exp_trans.alu_result, we: 1};
-    end
+  // ADD instruction (R-type)
+  if (opcode == 7'b0110011 && funct3 == 3'b000 && funct7 == 7'b0000000) begin
+    exp_trans_local.alu_result = rs1 + rs2;
+    exp_trans_local.valid_op = "ADD";
+    wb = '{rd: input_trans.rd, value: exp_trans_local.alu_result, we: 1};
+  end
+  // LW instruction (I-type)
+  else if (opcode == 7'b0000011 && funct3 == 3'b010) begin
+    exp_trans_local.mem_addr = rs1 + input_trans.imm_i;
+    exp_trans_local.data_rd  = input_trans.mem_data;
+    exp_trans_local.valid_op = "LW";
+    wb = '{rd: input_trans.rd, value: input_trans.mem_data, we: 1};
+  end
+  // SW instruction (S-type)
+  else if (opcode == 7'b0100011 && funct3 == 3'b010) begin
+    exp_trans_local.mem_addr = rs1 + input_trans.imm_s;
+    exp_trans_local.data_wr  = rs2;
+    exp_trans_local.data_we  = 1;
+    exp_trans_local.valid_op = "SW";
+  end
+  else begin
+    `uvm_warning(get_full_name(), $sformatf("Unsupported instruction: 0x%h", input_trans.instr_data));
+  end
 
-    // LW instruction (I-type)
-    else if (opcode == 7'b0000011 && funct3 == 3'b010) begin
-      exp_trans.mem_addr = rs1 + input_trans.imm_i;
-      exp_trans.data_rd  = input_trans.mem_data; // Assumed observed
-      exp_trans.valid_op = "LW";
-      wb = '{rd: input_trans.rd, value: input_trans.mem_data, we: 1};
-    end
-
-    // SW instruction (S-type)
-    else if (opcode == 7'b0100011 && funct3 == 3'b010) begin
-      exp_trans.mem_addr = rs1 + input_trans.imm_s;
-      exp_trans.data_wr  = rs2;
-      exp_trans.data_we  = 1;
-      exp_trans.valid_op = "SW";
-      // No writeback for store
-    end
-
-    else begin
-      `uvm_warning(get_full_name(), $sformatf("Unsupported instruction: 0x%h", input_trans.instr_data));
-    end
-
-    // Insert result into pipeline queue (if writeback needed)
-    writeback_queue[4] = wb;
-
-    // Send expected transaction to scoreboard
-    rm2sb_port.write(exp_trans);
-  endtask
+  writeback_queue[4] = wb;
+  rm2sb_port.write(exp_trans_local);
+endtask
 
 endclass
 

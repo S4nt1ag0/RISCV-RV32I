@@ -10,7 +10,7 @@
 `ifndef RISCV_COVERAGE
 `define RISCV_COVERAGE
 
-class RISCV_coverage extends uvm_subscriber#(RISCV_transaction);
+class RISCV_coverage#(type T = RISCV_transaction) extends uvm_subscriber#(T);
 
   /*
    * Local copy of the transaction for coverage sampling
@@ -31,37 +31,30 @@ class RISCV_coverage extends uvm_subscriber#(RISCV_transaction);
 
     // Coverpoint for funct3 (bits [14:12] of instr_data)
     cp_funct3: coverpoint cov_trans.instr_data[14:12] {
-      bins sb  = {3'b000}; // SB
-      bins sh  = {3'b001}; // SH
-      bins sw  = {3'b010}; // SW
+      bins sb_bin = {3'b000}; // SB
+      bins sh_bin = {3'b001}; // SH
+      bins sw_bin = {3'b010}; // SW
     }
 
     // Coverpoint for instr_ready signal
     cp_instr_ready: coverpoint cov_trans.instr_ready {
-      bins ready  = {1};
+      bins ready     = {1};
       bins not_ready = {0};
-    }
-
-    // Coverpoint for instruction name (optional)
-    cp_instr_name: coverpoint cov_trans.instr_name {
-      bins sb = {"SB"};
-      bins sh = {"SH"};
-      bins sw = {"SW"};
     }
 
     // Coverpoint for address being written to
     cp_data_addr: coverpoint cov_trans.data_addr {
-      bins low  = {[32'h0000_0000 : 32'h0000_00FF]};
-      bins mid  = {[32'h0000_0100 : 32'h0000_0FFF]};
-      bins high = {[32'h0000_1000 : 32'hFFFF_FFFF]};
+      bins low_addr  = {[32'h0000_0000 : 32'h0000_00FF]};
+      bins mid_addr  = {[32'h0000_0100 : 32'h0000_0FFF]};
+      bins high_addr = {[32'h0000_1000 : 32'hFFFF_FFFF]};
     }
 
     // Coverpoint for data being written
     cp_data_wr: coverpoint cov_trans.data_wr {
-      bins zero = {32'd0};
-      bins all_ones = {32'hFFFF_FFFF};
-      bins small = {[1:255]};
-      bins large = {[256:$]};
+      bins zero_val     = {32'd0};
+      bins all_ones_val = {32'hFFFF_FFFF};
+      bins small_val    = {[32'd1 : 32'd255]};
+      bins large_val    = {[32'd256 : 32'hFFFF_FFFF]};
     }
 
   endgroup

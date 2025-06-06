@@ -19,13 +19,13 @@ package RISCV_env_pkg;
    * Importing packages: agent, ref model, register, etc.
    */
   import RISCV_agent_pkg::*;
-  import adder_ref_model_pkg::*;
+  import RISCV_ref_model_pkg::*;
 
   /*
    * Include top env files 
    */
- // `include "RISCV_coverage.sv"   rever isso depois
- // `include "RISCV_scoreboard.sv" rever isso depois
+  `include "RISCV_coverage.sv"  
+  `include "RISCV_scoreboard.sv"
   `include "RISCV_env.sv"
 
 endpackage
