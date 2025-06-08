@@ -1,5 +1,57 @@
-# RISCV
-A riscv processor.
+# RISCV Processor
+A simple RISC-V processor implementation with a structured verification environment.
+
+## Source Organization
+- **RTL Design**: Located in the `rtl/` directory.
+- **Testbench Components**: Organized under `tb/` with subdirectories for agents, reference models, and top-level environment.
+- **Source Lists**: Defined in `srclist/` for easy inclusion in simulation scripts.
+- **doc**: Located in `doc/ `contains the conception and microarchitecture.
+
+## Instructions
+The following table lists the implemented instructions and their status.
+
+| # | Instruction | Implemented | Tested | Working |
+|---|-------------|:-----------:|:------:|:-------:|
+| 1 | `LUI`       |     ✅     |   ✅   |   ✅   | 
+| 2 | `AUIPC`     |     ✅     |   ✅   |   ✅   | 
+| 3 | `JAL`       |     ✅     |   ✅   |   ✅   | 
+| 4 | `JALR`      |     ✅     |   ✅   |   ✅   | 
+| 5 | `BEQ`       |     ✅     |   ✅   |   ✅   | 
+| 6 | `BNE`       |     ✅     |   ✅   |   ✅   | 
+| 7 | `BLT`       |     ✅     |   ✅   |   ✅   | 
+| 8 | `BGE`       |     ✅     |   ✅   |   ✅   | 
+| 9 | `BLTU`      |     ✅     |   ✅   |   ✅   | 
+| 10| `BGEU`      |     ✅     |   ✅   |   ✅   | 
+| 11| `LB`        |     ✅     |   ✅   |   ✅   | 
+| 12| `LH`        |     ✅     |   ✅   |   ✅   | 
+| 13| `LW`        |     ✅     |   ✅   |   ✅   | 
+| 14| `LBU`       |     ✅     |   ✅   |   ✅   | 
+| 15| `LHU`       |     ✅     |   ✅   |   ✅   | 
+| 16| `SB`        |     ✅     |   ✅   |   ✅   | 
+| 17| `SH`        |     ✅     |   ✅   |   ✅   | 
+| 18| `SW`        |     ✅     |   ✅   |   ✅   | 
+| 19| `ADDI`      |     ✅     |   ✅   |   ✅   | 
+| 20| `SLTI`      |     ✅     |   ✅   |   ✅   | 
+| 21| `SLTIU`     |     ✅     |   ✅   |   ✅   | 
+| 22| `XORI`      |     ✅     |   ✅   |   ✅   | 
+| 23| `ORI`       |     ✅     |   ✅   |   ✅   | 
+| 24| `ANDI`      |     ✅     |   ✅   |   ✅   | 
+| 25| `SLLI`      |     ✅     |   ✅   |   ✅   | 
+| 26| `SRLI`      |     ✅     |   ✅   |   ✅   | 
+| 27| `SRAI`      |     ✅     |   ✅   |   ✅   | 
+| 28| `ADD`       |     ✅     |   ✅   |   ✅   | 
+| 29| `SUB`       |     ✅     |   ✅   |   ✅   | 
+| 30| `SLL`       |     ✅     |   ✅   |   ✅   | 
+| 31| `SLT`       |     ✅     |   ✅   |   ✅   | 
+| 32| `SLTU`      |     ✅     |   ✅   |   ✅   | 
+| 33| `XOR`       |     ✅     |   ✅   |   ✅   | 
+| 34| `SRL`       |     ✅     |   ✅   |   ✅   | 
+| 35| `SRA`       |     ✅     |   ✅   |   ✅   | 
+| 36| `OR`        |     ✅     |   ✅   |   ✅   | 
+| 37| `AND`       |     ✅     |   ✅   |   ✅   | 
+| 38| `FENCE`     |     ❌     |   ❌   |   ❌   | 
+| 39| `ECALL`     |     ❌     |   ❌   |   ❌   | 
+| 40| `EBREAK`    |     ❌     |   ❌   |   ❌   | 
 
 ## Implementation Status
 
@@ -43,12 +95,6 @@ The verification template in this repository is designed to provide a modular an
 
 8. **Automation Scripts**:
    - The `bin/xrun.sh` script automates the build, simulation, and cleanup processes.
-
-### Source Organization
-- **RTL Design**: Located in the `rtl/` directory.
-- **Testbench Components**: Organized under `tb/` with subdirectories for agents, reference models, and top-level environment.
-- **Source Lists**: Defined in `srclist/` for easy inclusion in simulation scripts.
-- **Submodules**: Located in `src/` for easy integration with git submodules and dependencies.
 
 This template is designed to streamline the verification process, promote reusability, and ensure thorough testing of the RISCV design.
 
