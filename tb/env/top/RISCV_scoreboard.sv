@@ -20,11 +20,11 @@ class RISCV_scoreboard extends uvm_scoreboard;
   /*
    * Analysis ports and FIFOs
    */
-  uvm_analysis_export#(RISCV_transaction) rm2sb_export, mon2sb_export;
-  uvm_tlm_analysis_fifo#(RISCV_transaction) rm2sb_export_fifo, mon2sb_export_fifo;
+  uvm_analysis_export#(RISCV_input_transaction) rm2sb_export, mon2sb_export;
+  uvm_tlm_analysis_fifo#(RISCV_input_transaction) rm2sb_export_fifo, mon2sb_export_fifo;
 
-  RISCV_transaction exp_trans, act_trans;
-  RISCV_transaction exp_trans_fifo[$], act_trans_fifo[$];
+  RISCV_input_transaction exp_trans, act_trans;
+  RISCV_input_transaction exp_trans_fifo[$], act_trans_fifo[$];
   bit error;
 
   /*
@@ -76,7 +76,7 @@ class RISCV_scoreboard extends uvm_scoreboard;
    * Transaction comparison
    */
   task compare_trans();
-    RISCV_transaction act_trans, exp_trans;
+    RISCV_input_transaction act_trans, exp_trans;
     if (exp_trans_fifo.size != 0 && act_trans_fifo.size != 0) begin
       exp_trans = exp_trans_fifo.pop_front();
       act_trans = act_trans_fifo.pop_front();

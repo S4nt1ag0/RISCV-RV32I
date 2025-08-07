@@ -18,13 +18,15 @@ package RISCV_agent_pkg;
   /*
    * Include Agent components: driver, monitor, sequencer
    */
-  `include "RISCV_defines.sv" //rever esse carinha
+  `include "RISCV_defines.sv"
   `include "RISCV_transaction.sv"
+  `include "RISCV_input_transaction.sv"
+  `include "RISCV_output_transaction.sv"
   `include "RISCV_sequencer.sv"
   `include "RISCV_driver.sv"
   `include "RISCV_monitor.sv"
   `include "RISCV_agent.sv"
-
+  
 endpackage
 
 `endif

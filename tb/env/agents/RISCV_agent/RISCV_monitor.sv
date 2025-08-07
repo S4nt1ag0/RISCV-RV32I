@@ -13,7 +13,7 @@
 class RISCV_monitor extends uvm_monitor;
  
   virtual RISCV_interface vif;
-  uvm_analysis_port #(RISCV_transaction) mon2sb_port;
+  uvm_analysis_port #(RISCV_output_transaction) mon2sb_port;
 
   `uvm_component_utils(RISCV_monitor)
 
@@ -35,11 +35,11 @@ class RISCV_monitor extends uvm_monitor;
   endtask : run_phase
 
   task collect_trans();
-    RISCV_transaction act_trans;
+    RISCV_output_transaction act_trans;
 
     wait(!vif.reset);  // Espera sair do reset
 
-    act_trans = RISCV_transaction::type_id::create("act_trans", this);
+    act_trans = RISCV_output_transaction::type_id::create("act_trans", this);
 
     // Inputs
     act_trans.instr_ready   = vif.instr_ready;

@@ -17,7 +17,7 @@ class RISCV_environment extends uvm_env;
    */
   RISCV_agent RISCV_agnt;
   RISCV_ref_model ref_model;
-  RISCV_coverage#(RISCV_transaction) coverage;
+  RISCV_coverage#(RISCV_input_transaction) coverage;
   RISCV_scoreboard  sb;
    
   /*
@@ -39,7 +39,7 @@ class RISCV_environment extends uvm_env;
     super.build_phase(phase);
     RISCV_agnt = RISCV_agent::type_id::create("RISCV_agent", this);
     ref_model = RISCV_ref_model::type_id::create("ref_model", this);
-    coverage = RISCV_coverage#(RISCV_transaction)::type_id::create("coverage", this);
+    //coverage = RISCV_coverage#(RISCV_transaction)::type_id::create("coverage", this);
     sb = RISCV_scoreboard::type_id::create("sb", this);
   endfunction : build_phase
 

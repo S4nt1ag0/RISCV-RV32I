@@ -10,13 +10,13 @@
 `ifndef RISCV_DRIVER
 `define RISCV_DRIVER
 
-class RISCV_driver extends uvm_driver #(RISCV_transaction);
+class RISCV_driver extends uvm_driver #(RISCV_input_transaction);
  
-  RISCV_transaction trans;
+  RISCV_input_transaction trans;
   virtual RISCV_interface vif;
 
   `uvm_component_utils(RISCV_driver)
-  uvm_analysis_port#(RISCV_transaction) drv2rm_port;
+  uvm_analysis_port#(RISCV_input_transaction) drv2rm_port;
 
   function new (string name, uvm_component parent);
     super.new(name, parent);

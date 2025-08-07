@@ -10,7 +10,7 @@
 `ifndef RISCV_SEQUENCER
 `define RISCV_SEQUENCER
 
-class RISCV_sequencer extends uvm_sequencer#(RISCV_transaction);
+class RISCV_sequencer extends uvm_sequencer#(RISCV_input_transaction);
  
   `uvm_component_utils(RISCV_sequencer)
  
